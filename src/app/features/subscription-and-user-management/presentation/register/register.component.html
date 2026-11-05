@@ -1,0 +1,138 @@
+<div class="min-h-dvh flex flex-col justify-center px-6 py-12 relative overflow-hidden" style="background: var(--gradient-hero)">
+  <div class="absolute inset-0 opacity-[0.03]" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 60 60%22><path d=%22M30 5 Q40 15 30 30 Q20 45 30 55%22 stroke=%22white%22 fill=%22none%22 stroke-width=%220.5%22/></svg>'); background-size: 60px 60px"></div>
+
+  <div class="mx-auto w-full relative" style="max-width: var(--mobile-content-max)">
+    <div class="text-center mb-6 animate-fadeUp" style="animation: fadeUp 0.6s ease-out both">
+      <a routerLink="/auth/login" class="mb-5 inline-flex items-center gap-2 rounded-full px-4 py-2 transition-colors hover:opacity-85" style="background: var(--color-white-08); border: 1px solid var(--color-white-12); color: var(--color-text-inverse); font-family: var(--font-body)">
+        <span>Volver</span>
+        <span>a iniciar sesion</span>
+      </a>
+      <h1 class="text-white mb-2" style="font-family: var(--font-heading); font-size: var(--font-size-h1); font-weight: var(--font-weight-bold); line-height: var(--line-height-h1); letter-spacing: var(--letter-spacing-tight)">
+        Crear cuenta
+      </h1>
+      <p style="font-family: var(--font-body); font-size: var(--font-size-body); line-height: var(--line-height-body); color: var(--color-text-inverse); opacity: 0.7">
+        &Uacute;nete a Smart Palm y protege tus cultivos
+      </p>
+    </div>
+
+    @if (error) {
+    <div class="mb-4 px-4 py-3 rounded-lg text-sm animate-fadeUp" style="background: var(--color-danger-10); color: var(--color-danger); border: 1px solid var(--color-danger); font-family: var(--font-body); animation-delay: 0.15s">
+      {{ error }}
+    </div>
+    }
+
+    <div class="animate-fadeUp" style="animation-delay: 0.2s">
+      <form [formGroup]="form" (ngSubmit)="submit()" class="rounded-2xl p-6 flex flex-col gap-4" style="background: var(--color-white-08); backdrop-filter: var(--blur-glass); border: 1px solid var(--color-white-12)">
+        <div>
+          <label class="block mb-1.5" style="font-family: var(--font-body); font-size: var(--font-size-label); line-height: var(--line-height-label); letter-spacing: var(--letter-spacing-label); color: var(--color-text-inverse); opacity: 0.8">
+            Nombre completo
+          </label>
+          <input formControlName="fullName" type="text" autocomplete="name"
+            class="w-full px-4 py-3.5 rounded-xl border text-base outline-none transition-all duration-300 focus:ring-2 focus:border-transparent"
+            style="background: var(--color-white-06); border-color: var(--color-white-12); color: var(--color-text-inverse); font-family: var(--font-body); --tw-ring-color: var(--color-brand-secondary)"
+            placeholder="Carlos Mendez Rios" />
+          @if (hasError('fullName')) {
+          <p class="mt-2" style="font-family: var(--font-body); font-size: var(--font-size-small); color: var(--color-warning-soft)">{{ getErrorMessage('fullName') }}</p>
+          }
+        </div>
+
+        <div>
+          <label class="block mb-1.5" style="font-family: var(--font-body); font-size: var(--font-size-label); line-height: var(--line-height-label); letter-spacing: var(--letter-spacing-label); color: var(--color-text-inverse); opacity: 0.8">
+            Correo electronico
+          </label>
+          <input formControlName="email" type="email" autocomplete="email"
+            class="w-full px-4 py-3.5 rounded-xl border text-base outline-none transition-all duration-300 focus:ring-2 focus:border-transparent"
+            style="background: var(--color-white-06); border-color: var(--color-white-12); color: var(--color-text-inverse); font-family: var(--font-body); --tw-ring-color: var(--color-brand-secondary)"
+            placeholder="tu@email.com" />
+          @if (hasError('email')) {
+          <p class="mt-2" style="font-family: var(--font-body); font-size: var(--font-size-small); color: var(--color-warning-soft)">{{ getErrorMessage('email') }}</p>
+          }
+        </div>
+
+        <div>
+          <label class="block mb-1.5" style="font-family: var(--font-body); font-size: var(--font-size-label); line-height: var(--line-height-label); letter-spacing: var(--letter-spacing-label); color: var(--color-text-inverse); opacity: 0.8">
+            Contrase&ntilde;a
+          </label>
+          <input formControlName="password" type="password" autocomplete="new-password"
+            class="w-full px-4 py-3.5 rounded-xl border text-base outline-none transition-all duration-300 focus:ring-2 focus:border-transparent"
+            style="background: var(--color-white-06); border-color: var(--color-white-12); color: var(--color-text-inverse); font-family: var(--font-body); --tw-ring-color: var(--color-brand-secondary)"
+            placeholder="Minimo 8 caracteres, una mayuscula y un numero" />
+          <p class="mt-2" style="font-family: var(--font-body); font-size: var(--font-size-small); color: var(--color-white-40)">
+            Formato esperado: minimo 8 caracteres, una mayuscula y un numero.
+          </p>
+          @if (hasError('password')) {
+          <p class="mt-1" style="font-family: var(--font-body); font-size: var(--font-size-small); color: var(--color-warning-soft)">{{ getErrorMessage('password') }}</p>
+          }
+        </div>
+
+        <div>
+          <label class="block mb-1.5" style="font-family: var(--font-body); font-size: var(--font-size-label); line-height: var(--line-height-label); letter-spacing: var(--letter-spacing-label); color: var(--color-text-inverse); opacity: 0.8">
+            Rol
+          </label>
+          <select formControlName="role"
+            class="w-full px-4 py-3.5 rounded-xl border text-base outline-none transition-all duration-300 focus:ring-2 focus:border-transparent"
+            style="background: var(--color-white-06); border-color: var(--color-white-12); color: var(--color-text-inverse); font-family: var(--font-body); --tw-ring-color: var(--color-brand-secondary)">
+            <option value="palm_grower" style="color: var(--color-text-primary)">Agricultor</option>
+            <option value="agronomist" style="color: var(--color-text-primary)">Agrónomo</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block mb-1.5" style="font-family: var(--font-body); font-size: var(--font-size-label); line-height: var(--line-height-label); letter-spacing: var(--letter-spacing-label); color: var(--color-text-inverse); opacity: 0.8">
+            Telefono
+          </label>
+          <input formControlName="phone" type="tel" autocomplete="tel"
+            class="w-full px-4 py-3.5 rounded-xl border text-base outline-none transition-all duration-300 focus:ring-2 focus:border-transparent"
+            style="background: var(--color-white-06); border-color: var(--color-white-12); color: var(--color-text-inverse); font-family: var(--font-body); --tw-ring-color: var(--color-brand-secondary)"
+            placeholder="+51 961 234 567" />
+          <p class="mt-2" style="font-family: var(--font-body); font-size: var(--font-size-small); color: var(--color-white-40)">
+            Usa exactamente este formato: +51 961 234 567.
+          </p>
+          @if (hasError('phone')) {
+          <p class="mt-1" style="font-family: var(--font-body); font-size: var(--font-size-small); color: var(--color-warning-soft)">{{ getErrorMessage('phone') }}</p>
+          }
+        </div>
+
+        <div>
+          <label class="block mb-1.5" style="font-family: var(--font-body); font-size: var(--font-size-label); line-height: var(--line-height-label); letter-spacing: var(--letter-spacing-label); color: var(--color-text-inverse); opacity: 0.8">
+            Region
+          </label>
+          <select formControlName="region"
+            class="w-full px-4 py-3.5 rounded-xl border text-base outline-none transition-all duration-300 focus:ring-2 focus:border-transparent"
+            style="background: var(--color-white-06); border-color: var(--color-white-12); color: var(--color-text-inverse); font-family: var(--font-body); --tw-ring-color: var(--color-brand-secondary)">
+            <option value="" disabled style="color: var(--color-text-muted)">Selecciona tu region</option>
+            @for (r of regions; track r) {
+             <option [value]="r" style="color: var(--color-text-primary)">{{ r }}</option>
+             }
+           </select>
+          @if (hasError('region')) {
+          <p class="mt-2" style="font-family: var(--font-body); font-size: var(--font-size-small); color: var(--color-warning-soft)">{{ getErrorMessage('region') }}</p>
+          }
+        </div>
+
+        <div>
+          <label class="block mb-1.5" style="font-family: var(--font-body); font-size: var(--font-size-label); line-height: var(--line-height-label); letter-spacing: var(--letter-spacing-label); color: var(--color-text-inverse); opacity: 0.8">
+            Ciudad
+          </label>
+          <input formControlName="city" type="text" autocomplete="address-level2"
+            class="w-full px-4 py-3.5 rounded-xl border text-base outline-none transition-all duration-300 focus:ring-2 focus:border-transparent"
+            style="background: var(--color-white-06); border-color: var(--color-white-12); color: var(--color-text-inverse); font-family: var(--font-body); --tw-ring-color: var(--color-brand-secondary)"
+            placeholder="Pucallpa" />
+          @if (hasError('city')) {
+          <p class="mt-2" style="font-family: var(--font-body); font-size: var(--font-size-small); color: var(--color-warning-soft)">{{ getErrorMessage('city') }}</p>
+          }
+        </div>
+
+        <button type="submit" [disabled]="form.invalid || loading"
+          class="w-full py-3.5 rounded-xl font-bold text-base transition-all duration-300 disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98] mt-2"
+          style="background: var(--color-brand-secondary); color: var(--color-brand-deep); font-family: var(--font-heading); box-shadow: var(--shadow-cta)">
+          {{ loading ? 'Creando cuenta...' : 'Crear cuenta' }}
+        </button>
+      </form>
+    </div>
+
+    <p class="text-center mt-6 animate-fadeUp" style="animation-delay: 0.4s; font-family: var(--font-body); font-size: var(--font-size-small); color: var(--color-white-40)">
+      Ya tienes cuenta? <a routerLink="/auth/login" class="font-medium hover:underline transition-colors" style="color: var(--color-brand-secondary)">Inicia sesion</a>
+    </p>
+  </div>
+</div>

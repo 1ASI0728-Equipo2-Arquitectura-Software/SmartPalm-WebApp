@@ -1,0 +1,128 @@
+<section class="min-h-dvh overflow-x-hidden px-10 py-10" style="background: var(--color-bg-page)">
+  <div class="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-6">
+    <a routerLink="/dashboard" class="w-fit text-sm font-medium" style="color: var(--color-brand-primary)">
+      &larr; {{ backDashboardLabel() }}
+    </a>
+
+    @if (loading()) {
+    <div class="flex min-h-60 flex-col items-center justify-center gap-3 rounded-[1.75rem] border px-6 py-10" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle)">
+      <div class="h-8 w-8 animate-spin rounded-full border-2" style="border-color: var(--color-border-subtle); border-top-color: var(--color-brand-primary)"></div>
+      <p class="text-sm" style="color: var(--color-text-muted)">{{ loadingLabel() }}</p>
+    </div>
+    } @else if (user(); as u) {
+
+    <div class="overflow-hidden rounded-[1.75rem] border px-8 py-7" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+      <div class="grid min-w-0 grid-cols-[1fr_auto] items-center gap-6">
+        <div class="flex min-w-0 items-center gap-5">
+          <div class="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full text-2xl font-bold" style="background: var(--color-bg-soft-2); color: var(--color-brand-primary); font-family: var(--font-heading)">
+            {{ u.fullName.charAt(0) }}
+          </div>
+          <div class="min-w-0">
+            <h1 class="truncate" style="font-family: var(--font-heading); font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: var(--font-weight-bold); color: var(--color-text-primary)">{{ u.fullName }}</h1>
+            <p class="mt-1 truncate text-sm" style="color: var(--color-text-secondary)">
+              {{ roleLabel(u.role) }}
+              @if (u.city || u.region) {
+              <span> &middot; {{ u.city || '—' }}{{ u.region ? ', ' + u.region : '' }}</span>
+              }
+            </p>
+          </div>
+        </div>
+        @if (!editing) {
+        <button (click)="startEdit()" class="rounded-xl px-5 py-3 text-sm font-semibold transition active:scale-[0.98] inline-flex items-center gap-2" style="background: var(--color-brand-secondary); color: var(--color-brand-deep); font-family: var(--font-heading)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+          {{ editBtnLabel() }}
+        </button>
+        }
+      </div>
+    </div>
+
+    @if (editing) {
+    <div class="overflow-hidden rounded-[1.75rem] border px-8 py-7" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+      <h2 class="truncate text-xl font-bold" style="font-family: var(--font-heading); color: var(--color-text-primary)">{{ editHeadingLabel() }}</h2>
+
+      @if (error()) {
+      <div class="mt-4 rounded-2xl px-4 py-3 text-sm" style="background: var(--color-danger-10); color: var(--color-danger); border: 1px solid var(--color-danger); font-family: var(--font-body)">{{ error() }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="mt-6 grid min-w-0 grid-cols-2 gap-5">
+        <div class="min-w-0">
+          <label class="mb-1.5 block text-sm" style="color: var(--color-text-secondary)">{{ fullNameLabel() }}</label>
+          <input formControlName="fullName" type="text" class="w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:border-transparent" style="border-color: var(--color-border-subtle); background: var(--color-bg-surface); color: var(--color-text-primary); --tw-ring-color: var(--color-brand-primary)" />
+        </div>
+        <div class="min-w-0">
+          <label class="mb-1.5 block text-sm" style="color: var(--color-text-secondary)">{{ phoneLabel() }}</label>
+          <input formControlName="phone" type="tel" class="w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:border-transparent" style="border-color: var(--color-border-subtle); background: var(--color-bg-surface); color: var(--color-text-primary); --tw-ring-color: var(--color-brand-primary)" placeholder="+51 961 234 567" />
+        </div>
+        <div class="min-w-0">
+          <label class="mb-1.5 block text-sm" style="color: var(--color-text-secondary)">{{ regionLabel() }}</label>
+          <select formControlName="region" class="w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:border-transparent" style="border-color: var(--color-border-subtle); background: var(--color-bg-surface); color: var(--color-text-primary); --tw-ring-color: var(--color-brand-primary)">
+            @for (r of regions; track r) { <option [value]="r">{{ r }}</option> }
+          </select>
+        </div>
+        <div class="min-w-0">
+          <label class="mb-1.5 block text-sm" style="color: var(--color-text-secondary)">{{ cityLabel() }}</label>
+          <input formControlName="city" type="text" class="w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 focus:border-transparent" style="border-color: var(--color-border-subtle); background: var(--color-bg-surface); color: var(--color-text-primary); --tw-ring-color: var(--color-brand-primary)" />
+        </div>
+        <div class="col-span-2 mt-2 flex gap-3">
+          <button type="submit" [disabled]="form.invalid || saving()"
+            class="flex-1 rounded-xl px-5 py-3 text-sm font-semibold transition disabled:opacity-50 active:scale-[0.98]"
+            style="background: var(--color-brand-primary); color: var(--color-text-inverse); font-family: var(--font-heading)">{{ saving() ? savingLabel() : saveLabel() }}</button>
+          <button type="button" (click)="cancelEdit()"
+            class="flex-1 rounded-xl border px-5 py-3 text-sm font-semibold transition active:scale-[0.98]"
+            style="background: var(--color-bg-soft); color: var(--color-text-secondary); border-color: var(--color-border-subtle); font-family: var(--font-heading)">{{ cancelLabel() }}</button>
+        </div>
+      </form>
+    </div>
+    }
+
+    <div class="grid min-w-0 grid-cols-2 gap-5">
+      <div class="overflow-hidden rounded-[1.5rem] border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <p class="truncate text-xs uppercase tracking-[0.12em]" style="color: var(--color-text-muted)">{{ emailLabel() }}</p>
+        <p class="mt-1 truncate text-sm font-medium" style="color: var(--color-text-primary)">{{ u.email }}</p>
+      </div>
+      <div class="overflow-hidden rounded-[1.5rem] border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <p class="truncate text-xs uppercase tracking-[0.12em]" style="color: var(--color-text-muted)">{{ phoneFieldLabel() }}</p>
+        <p class="mt-1 truncate text-sm font-medium" style="color: var(--color-text-primary)">{{ u.phone || '—' }}</p>
+      </div>
+      <div class="overflow-hidden rounded-[1.5rem] border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <p class="truncate text-xs uppercase tracking-[0.12em]" style="color: var(--color-text-muted)">{{ locationLabel() }}</p>
+        <p class="mt-1 truncate text-sm font-medium" style="color: var(--color-text-primary)">{{ u.city }}, {{ u.region }}</p>
+      </div>
+      <div class="overflow-hidden rounded-[1.5rem] border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <p class="truncate text-xs uppercase tracking-[0.12em]" style="color: var(--color-text-muted)">{{ subscriptionFieldLabel() }}</p>
+        @if (u.subscription) {
+        <p class="mt-1 inline-flex items-center gap-1.5 text-sm font-medium" style="color: var(--color-text-primary)">
+          <span class="inline-block h-2 w-2 rounded-full" style="background: var(--color-success)"></span>
+          {{ u.subscription.planName }}
+        </p>
+        } @else {
+        <p class="mt-1 text-sm" style="color: var(--color-text-muted)">{{ noActivePlanLabel() }}</p>
+        }
+      </div>
+    </div>
+
+    @if (u.subscription) {
+    <div class="overflow-hidden rounded-[1.5rem] border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+      <div class="grid grid-cols-[1fr_auto] items-center gap-4">
+        <div class="min-w-0">
+          <p class="truncate text-xs uppercase tracking-[0.12em]" style="color: var(--color-text-muted)">{{ planStatusLabel() }}</p>
+          <p class="mt-1 truncate text-sm font-medium" style="color: var(--color-text-primary)">
+            {{ statusLabel(u.subscription.status) }} &middot; {{ untilLabel() }} {{ u.subscription.endDate | date:'dd/MM/yyyy' }}
+          </p>
+        </div>
+        <div class="flex h-12 w-12 items-center justify-center rounded-full" style="background: var(--color-emerald-15)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      </div>
+    </div>
+    }
+    } @else {
+    <div class="flex flex-col items-center gap-4 overflow-hidden rounded-[1.75rem] border px-8 py-14 text-center" style="background: var(--color-bg-surface); border-color: var(--color-danger); box-shadow: var(--shadow-card)">
+      <div class="flex h-16 w-16 items-center justify-center rounded-full" style="background: var(--color-danger-10)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <p class="max-w-md text-sm leading-6" style="color: var(--color-text-secondary)">{{ error() || errorFallbackLabel() }}</p>
+    </div>
+    }
+  </div>
+</section>

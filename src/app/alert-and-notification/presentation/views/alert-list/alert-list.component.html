@@ -1,0 +1,117 @@
+<section class="min-h-dvh px-6 py-8 sm:px-8 lg:px-10 lg:py-10" style="background: var(--color-bg-page)">
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <a routerLink="/dashboard" class="text-sm font-medium" style="color: var(--color-brand-primary)">
+      &larr; Dashboard
+    </a>
+
+    <div class="flex flex-col gap-5 rounded-[1.75rem] border px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+      <div>
+        <p class="text-xs font-medium uppercase tracking-[0.18em]" style="color: var(--color-text-muted)">{{ sectionLabel }}</p>
+        <h1 class="mt-1" style="font-family: var(--font-heading); font-size: clamp(1.8rem, 2.5vw, 2.5rem); font-weight: var(--font-weight-bold); color: var(--color-text-primary)">Alertas</h1>
+        <p class="mt-1 text-sm max-w-xl" style="color: var(--color-text-secondary)">{{ headingSubtitle }}</p>
+      </div>
+      @if (badgeCount(); as badge) {
+      <div class="flex items-center gap-2">
+        <div class="rounded-2xl px-4 py-3 text-center" style="background: var(--color-bg-soft-2)">
+          <p class="text-lg font-bold" style="color: var(--color-text-primary)">{{ badge.total }}</p>
+          <p class="text-xs" style="color: var(--color-text-muted)">{{ badgeActiveLabel }}</p>
+        </div>
+        @if (badge.critical > 0) {
+        <div class="rounded-2xl px-4 py-3 text-center" style="background: var(--color-danger-10)">
+          <p class="text-lg font-bold" style="color: var(--color-danger)">{{ badge.critical }}</p>
+           <p class="text-xs font-medium" style="color: var(--color-danger)">{{ badgeCriticalLabel }}</p>
+        </div>
+        }
+        @if (badge.unacknowledged > 0) {
+        <div class="rounded-2xl px-4 py-3 text-center" style="background: #fef3c7">
+          <p class="text-lg font-bold" style="color: #92400e">{{ badge.unacknowledged }}</p>
+           <p class="text-xs font-medium" style="color: #92400e">{{ badgeUnacknowledgedLabel }}</p>
+        </div>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="flex gap-2">
+      <button type="button" (click)="setTab('active')" class="rounded-xl px-5 py-2.5 text-sm font-semibold transition active:scale-[0.98]"
+        [style.background]="activeTab() === 'active' ? 'var(--color-brand-primary)' : 'var(--color-bg-surface)'"
+        [style.color]="activeTab() === 'active' ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)'"
+        [style.box-shadow]="activeTab() === 'active' ? 'var(--shadow-card)' : 'none'">
+        {{ tabActiveLabel }} {{ badgeCount()?.total ?? '' }}
+      </button>
+      <button type="button" (click)="setTab('resolved')" class="rounded-xl px-5 py-2.5 text-sm font-semibold transition active:scale-[0.98]"
+        [style.background]="activeTab() === 'resolved' ? 'var(--color-brand-primary)' : 'var(--color-bg-surface)'"
+        [style.color]="activeTab() === 'resolved' ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)'"
+        [style.box-shadow]="activeTab() === 'resolved' ? 'var(--shadow-card)' : 'none'">
+        {{ tabResolvedLabel }}
+      </button>
+    </div>
+
+    @if (actionError()) {
+    <div class="rounded-2xl border px-5 py-4 text-sm" style="background: var(--color-danger-10); color: var(--color-danger); border-color: var(--color-danger)">{{ actionError() }}</div>
+    }
+
+    @if (loading()) {
+    <div class="flex min-h-60 flex-col items-center justify-center gap-3 rounded-[1.75rem] border px-6 py-10" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle)">
+      <div class="h-8 w-8 animate-spin rounded-full border-2" style="border-color: var(--color-border-subtle); border-top-color: var(--color-brand-primary)"></div>
+      <p class="text-sm" style="color: var(--color-text-muted)">{{ loadingText }}</p>
+    </div>
+    } @else if (error()) {
+    <div class="rounded-2xl border px-5 py-4 text-sm" style="background: var(--color-danger-10); color: var(--color-danger); border-color: var(--color-danger)">{{ error() }}</div>
+    } @else if (!alerts().length) {
+    <div class="flex flex-col items-center gap-4 rounded-[1.75rem] border px-6 py-14 text-center" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle)">
+      <div class="rounded-2xl px-5 py-4" style="background: var(--color-bg-soft-cyan)">
+        <svg class="h-10 w-10" style="color: var(--color-accent-cyan)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h2 class="text-xl font-bold" style="color: var(--color-text-primary)">{{ activeTab() === 'active' ? emptyActiveTitle : emptyResolvedTitle }}</h2>
+      <p class="text-sm max-w-sm" style="color: var(--color-text-secondary)">{{ activeTab() === 'active' ? emptyActiveDesc : emptyResolvedDesc }}</p>
+    </div>
+    } @else {
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      @for (alert of alerts(); track alert.id) {
+      <article class="group relative rounded-[1.25rem] border-l-4 overflow-hidden transition hover:-translate-y-1 hover:shadow-lg" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)" [style.border-left-color]="severityBorder[alert.alertLevel]">
+        <a class="block px-5 py-5" [routerLink]="['/alertas', alert.id]">
+          <div class="flex items-center justify-between gap-2">
+            <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold" [style.background]="severityBg[alert.alertLevel]" [style.color]="severityColor[alert.alertLevel]">
+              {{ severityLabel[alert.alertLevel] }}
+            </span>
+            <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" [style.background]="alert.acknowledged ? 'var(--color-emerald-15)' : 'var(--color-bg-soft-2)'" [style.color]="alert.acknowledged ? 'var(--color-success)' : 'var(--color-text-muted)'">
+              {{ activeTab() === 'active' ? (alert.acknowledged ? statusConfirmedLabel : statusPendingLabel) : statusResolvedLabel }}
+            </span>
+          </div>
+
+          <h2 class="mt-3 text-base font-bold leading-snug" style="color: var(--color-text-primary)">{{ alert.title }}</h2>
+          <p class="mt-1.5 text-sm" style="color: var(--color-text-secondary)">{{ alert.zoneName }} &middot; {{ alert.label }}</p>
+        </a>
+
+        <div class="border-t px-5 py-3" style="border-color: var(--color-border-subtle)">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="text-right flex-shrink-0">
+                <p class="text-lg font-bold" [style.color]="severityColor[alert.alertLevel]">{{ alert.triggeredValue }}</p>
+                <p class="text-xs" style="color: var(--color-text-muted)">{{ valueLabel }}</p>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs truncate" style="color: var(--color-text-muted)">{{ rangeLabel }} {{ alert.thresholdMin }} – {{ alert.thresholdMax }}</p>
+                <p class="text-xs truncate" style="color: var(--color-text-muted)">{{ alert.plantationName }}</p>
+              </div>
+            </div>
+            <span class="text-xs flex-shrink-0" style="color: var(--color-text-muted)">{{ alert.createdAt | date:'short' }}</span>
+          </div>
+        </div>
+
+        @if (activeTab() === 'active' && !alert.acknowledged) {
+        <div class="border-t px-5 py-3" style="border-color: var(--color-border-subtle)">
+          <button type="button" (click)="acknowledge(alert, $event)" [disabled]="saving() === alert.id"
+            class="w-full rounded-xl px-4 py-2.5 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-50"
+            style="background: var(--color-brand-primary); color: var(--color-text-inverse)">
+            {{ saving() === alert.id ? acknowledgingButtonLabel : acknowledgeButtonLabel }}
+          </button>
+        </div>
+        }
+      </article>
+      }
+    </div>
+    }
+  </div>
+</section>

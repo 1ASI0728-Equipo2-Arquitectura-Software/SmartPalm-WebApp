@@ -1,0 +1,101 @@
+<section class="flex flex-col gap-6">
+  <header class="rounded-[1.75rem] border px-5 py-6 sm:px-7" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+    <h1 class="text-2xl font-bold sm:text-3xl" style="font-family: var(--font-heading); color: var(--color-text-primary)">{{ title }}</h1>
+    <p class="mt-2 max-w-2xl text-sm leading-6" style="color: var(--color-text-secondary)">{{ subtitle }}</p>
+  </header>
+
+  @if (error()) {
+  <div class="rounded-xl border px-4 py-3 text-sm" style="background: var(--color-danger-10); color: var(--color-danger); border-color: var(--color-danger)">{{ error() }}</div>
+  }
+  @if (success()) {
+  <div class="rounded-xl border px-4 py-3 text-sm" style="background: var(--color-emerald-15); color: var(--color-brand-primary); border-color: var(--color-brand-secondary)">{{ success() }}</div>
+  }
+
+  <div class="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
+    <form (ngSubmit)="submit()" [formGroup]="form" class="rounded-2xl border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+      <div class="flex items-center gap-2">
+        <span class="flex h-8 w-8 items-center justify-center rounded-full" style="background: var(--color-emerald-15); color: var(--color-brand-primary)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        </span>
+        <h2 class="text-sm font-semibold uppercase tracking-wider" style="color: var(--color-text-muted)">{{ createTitle }}</h2>
+      </div>
+
+      <label class="mt-4 block text-xs font-semibold uppercase tracking-wide" style="color: var(--color-text-muted)">{{ fullNameLabel }}</label>
+      <input formControlName="fullName" class="mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:ring-2" style="border-color: var(--color-border-subtle); color: var(--color-text-primary); --tw-ring-color: var(--color-brand-secondary)" />
+
+      <label class="mt-3 block text-xs font-semibold uppercase tracking-wide" style="color: var(--color-text-muted)">{{ usernameLabel }}</label>
+      <input formControlName="username" class="mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm outline-none" style="border-color: var(--color-border-subtle); color: var(--color-text-primary)" />
+
+      <label class="mt-3 block text-xs font-semibold uppercase tracking-wide" style="color: var(--color-text-muted)">{{ emailLabel }}</label>
+      <input formControlName="email" type="email" class="mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm outline-none" style="border-color: var(--color-border-subtle); color: var(--color-text-primary)" />
+
+      <label class="mt-3 block text-xs font-semibold uppercase tracking-wide" style="color: var(--color-text-muted)">{{ passwordLabel }}</label>
+      <input formControlName="password" type="password" class="mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm outline-none" style="border-color: var(--color-border-subtle); color: var(--color-text-primary)" />
+
+      <label class="mt-3 block text-xs font-semibold uppercase tracking-wide" style="color: var(--color-text-muted)">{{ roleFieldLabel }}</label>
+      <select formControlName="role" class="mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm outline-none" style="border-color: var(--color-border-subtle); background: var(--color-bg-surface); color: var(--color-text-primary)">
+        @for (opt of roleOptions; track opt.value) {
+        <option [value]="opt.value">{{ roleOptionLabel(opt.labelKey) }}</option>
+        }
+      </select>
+      <p class="mt-1.5 text-[11px] leading-4" style="color: var(--color-text-muted)">{{ roleHelp }}</p>
+
+      <button type="submit" [disabled]="saving() || form.invalid" class="mt-5 w-full rounded-xl px-4 py-2.5 text-sm font-semibold transition hover:opacity-90 disabled:opacity-60" style="background: var(--color-brand-primary); color: var(--color-text-inverse)">
+        {{ submitLabel }}
+      </button>
+    </form>
+
+    <div class="rounded-2xl border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+      <div class="flex items-center justify-between gap-3">
+        <h2 class="text-sm font-semibold uppercase tracking-wider" style="color: var(--color-text-muted)">{{ listTitle }}</h2>
+        <button
+          type="button"
+          (click)="reload()"
+          class="rounded-lg px-2.5 py-1 text-xs font-semibold transition hover:opacity-80"
+          style="background: var(--color-bg-soft-2); color: var(--color-brand-primary)"
+          [attr.aria-label]="reloadLabel"
+          [title]="reloadLabel"
+        >
+          ↻
+        </button>
+      </div>
+
+      @if (loading()) {
+      <p class="mt-6 text-sm" style="color: var(--color-text-muted)">…</p>
+      } @else if (!users().length) {
+      <p class="mt-6 text-sm" style="color: var(--color-text-secondary)">{{ emptyLabel }}</p>
+      } @else {
+      <ul class="mt-4 flex max-h-[32rem] flex-col gap-3 overflow-y-auto pr-1">
+        @for (u of users(); track u.id) {
+        <li class="rounded-xl border px-4 py-3.5 transition hover:bg-[var(--color-bg-soft-2)]" style="border-color: var(--color-border-subtle)">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-semibold leading-5" style="color: var(--color-text-primary)">
+                {{ u.fullName || u.username }}
+              </p>
+              <dl class="mt-2.5 grid gap-1.5">
+                <div class="grid grid-cols-[5.5rem_1fr] items-baseline gap-x-2 gap-y-0.5 sm:grid-cols-[6rem_1fr]">
+                  <dt class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--color-text-muted)">{{ usernameLabel }}</dt>
+                  <dd class="truncate text-sm font-medium" style="color: var(--color-text-primary)">{{ u.username }}</dd>
+                </div>
+                <div class="grid grid-cols-[5.5rem_1fr] items-baseline gap-x-2 gap-y-0.5 sm:grid-cols-[6rem_1fr]">
+                  <dt class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--color-text-muted)">{{ emailLabel }}</dt>
+                  <dd class="truncate text-sm" style="color: var(--color-text-secondary)">{{ u.email || '—' }}</dd>
+                </div>
+              </dl>
+            </div>
+            <span
+              class="flex-shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none"
+              [style.background]="roleChipBg(u.role)"
+              [style.color]="roleChipFg(u.role)"
+            >
+              {{ roleLabel(u.role) }}
+            </span>
+          </div>
+        </li>
+        }
+      </ul>
+      }
+    </div>
+  </div>
+</section>

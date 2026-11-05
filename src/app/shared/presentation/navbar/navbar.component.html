@@ -1,0 +1,25 @@
+<nav class="px-6 py-3 flex items-center justify-end" style="background: var(--color-brand-deep)">
+  <div class="flex items-center gap-3">
+    <button
+      type="button"
+      data-testid="locale-toggle"
+      (click)="switchLanguage()"
+      [attr.aria-label]="toggleLabel"
+      class="relative inline-flex h-11 w-[88px] items-center rounded-full px-1 transition hover:opacity-90"
+      style="background: var(--color-white-08); border: 1px solid var(--color-white-12); color: var(--color-text-inverse); font-family: var(--font-heading)">
+      <span
+        class="absolute top-1 h-8 w-10 rounded-full transition-all duration-200"
+        [style.left]="localeService.locale() === 'es' ? '4px' : '42px'"
+        style="background: var(--color-brand-secondary); box-shadow: 0 8px 18px rgba(76, 205, 130, 0.28)"
+      ></span>
+      <span class="relative z-10 flex w-full items-center justify-between px-2 text-xs font-bold tracking-wide">
+        <span [style.color]="localeService.locale() === 'es' ? 'var(--color-brand-deep)' : 'var(--color-white-60)'">ES</span>
+        <span [style.color]="localeService.locale() === 'en' ? 'var(--color-brand-deep)' : 'var(--color-white-60)'">EN</span>
+      </span>
+    </button>
+ 
+    @if (currentUser) {
+      <app-notification-dropdown />
+    }
+  </div>
+</nav>

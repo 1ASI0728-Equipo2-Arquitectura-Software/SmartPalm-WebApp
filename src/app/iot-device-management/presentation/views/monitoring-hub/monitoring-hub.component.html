@@ -1,0 +1,200 @@
+<section class="min-h-dvh overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10" style="background: var(--color-bg-page)">
+  <div class="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-6">
+    <a routerLink="/dashboard" class="w-fit text-sm font-medium" style="color: var(--color-brand-primary)">
+      &larr; {{ backDashboardLabel }}
+    </a>
+
+    <div class="overflow-hidden rounded-[1.75rem] border px-5 py-5 sm:px-6" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div class="min-w-0">
+          <h1 style="font-family: var(--font-heading); font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: var(--font-weight-bold); color: var(--color-text-primary)">
+            {{ title }}
+          </h1>
+          <p class="mt-2 max-w-2xl text-sm leading-6" style="color: var(--color-text-secondary)">{{ subtitle }}</p>
+          <p class="mt-2 text-xs font-medium" style="color: var(--color-text-muted)">{{ contextLabel }}</p>
+        </div>
+        <button type="button" (click)="reload()" class="rounded-xl px-4 py-2.5 text-sm font-semibold" style="background: var(--color-brand-primary); color: var(--color-text-inverse)">
+          {{ refreshLabel }}
+        </button>
+      </div>
+    </div>
+
+    @if (error()) {
+    <div class="rounded-2xl border px-4 py-3 text-sm" style="background: var(--color-danger-10); color: var(--color-danger); border-color: var(--color-danger)">
+      {{ error() }}
+    </div>
+    }
+
+    @if (loading()) {
+    <div class="flex min-h-48 flex-col items-center justify-center gap-3 rounded-[1.75rem] border" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle)">
+      <div class="h-8 w-8 animate-spin rounded-full border-2" style="border-color: var(--color-border-subtle); border-top-color: var(--color-brand-primary)"></div>
+      <p class="text-sm" style="color: var(--color-text-muted)">{{ loadingLabel }}</p>
+    </div>
+    } @else {
+
+    <!-- KPI strip -->
+    <div class="grid gap-3 sm:grid-cols-3">
+      <div class="rounded-2xl border px-4 py-4" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle)">
+        <p class="text-xs uppercase tracking-wider" style="color: var(--color-text-muted)">{{ gatewaysLabel }}</p>
+        <p class="mt-1 text-2xl font-bold" style="color: var(--color-accent-cyan)">{{ connectedGateways() }}/{{ gateways().length }}</p>
+      </div>
+      <div class="rounded-2xl border px-4 py-4" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle)">
+        <p class="text-xs uppercase tracking-wider" style="color: var(--color-text-muted)">{{ healthLabel }}</p>
+        <p class="mt-1 text-xl font-bold" [style.color]="healthStatusColor(sectorHealth()?.status)">
+          {{ healthStatusLabel(sectorHealth()?.status) }}
+        </p>
+      </div>
+      <div class="rounded-2xl border px-4 py-4" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle)">
+        <p class="text-xs uppercase tracking-wider" style="color: var(--color-text-muted)">{{ exceededLabel }}</p>
+        <p class="mt-1 text-2xl font-bold" [style.color]="exceededCount() ? 'var(--color-danger)' : 'var(--color-success)'">{{ exceededCount() }}</p>
+      </div>
+    </div>
+
+    <div class="grid gap-5 lg:grid-cols-2">
+      <!-- Gateways + devices -->
+      <div class="rounded-[1.5rem] border p-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--color-brand-primary)">{{ gatewaysLabel }}</h2>
+        @if (!gateways().length) {
+        <p class="mt-4 text-sm" style="color: var(--color-text-muted)">{{ emptyGateways }}</p>
+        } @else {
+        <ul class="mt-4 space-y-2">
+          @for (g of gateways(); track g.mac) {
+          <li class="flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm" style="border-color: var(--color-border-subtle)">
+            <span class="font-mono text-xs font-medium" style="color: var(--color-text-primary)">{{ g.mac }}</span>
+            <span class="text-xs font-semibold" [style.color]="g.isConnected ? 'var(--color-success)' : 'var(--color-danger)'">
+              {{ connectivityLabel(g) }}
+            </span>
+          </li>
+          }
+        </ul>
+        }
+        <h3 class="mt-5 text-xs font-bold uppercase tracking-wider" style="color: var(--color-text-muted)">{{ devicesLabel }}</h3>
+        @if (!gatewayDevices().length) {
+        <p class="mt-2 text-sm" style="color: var(--color-text-muted)">{{ emptyDevices }}</p>
+        } @else {
+        <ul class="mt-2 flex flex-wrap gap-2">
+          @for (mac of gatewayDevices(); track mac) {
+          <li class="rounded-full px-3 py-1 font-mono text-xs" [style.background]="mac === deviceMac() ? 'var(--color-bg-soft-cyan)' : 'var(--color-bg-soft-2)'" [style.color]="mac === deviceMac() ? 'var(--color-accent-cyan)' : 'var(--color-text-muted)'">
+            {{ mac }}
+          </li>
+          }
+        </ul>
+        }
+      </div>
+
+      <!-- Sector health -->
+      <div class="rounded-[1.5rem] border p-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--color-brand-primary)">{{ healthLabel }}</h2>
+        @if (!sectorHealth()) {
+        <p class="mt-4 text-sm" style="color: var(--color-text-muted)">{{ emptyHealth }}</p>
+        } @else {
+        <p class="mt-3 text-lg font-bold" [style.color]="healthStatusColor(sectorHealth()!.status)">
+          {{ healthStatusLabel(sectorHealth()!.status) }}
+        </p>
+        <ul class="mt-3 space-y-2">
+          @for (d of sectorHealth()!.sensorDetails; track d.sensorType) {
+          <li class="rounded-xl border px-3 py-2.5 text-sm" style="border-color: var(--color-border-subtle)">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="font-medium" style="color: var(--color-text-primary)">{{ sensorTypeLabel(d.sensorType) }}</span>
+              <span class="text-xs font-semibold" [style.color]="d.isExceeded ? 'var(--color-danger)' : 'var(--color-success)'">
+                {{ d.isExceeded ? exceededLabel : inRangeLabel }}
+              </span>
+            </div>
+            <p class="mt-1 text-sm" style="color: var(--color-text-secondary)">
+              {{ d.value | number:'1.0-2' }}
+              <span class="text-xs" style="color: var(--color-text-muted)">({{ d.minThreshold | number:'1.0-1' }}–{{ d.maxThreshold | number:'1.0-1' }})</span>
+            </p>
+          </li>
+          }
+        </ul>
+        }
+      </div>
+    </div>
+
+    <!-- Thresholds -->
+    <div class="rounded-[1.5rem] border p-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+      <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--color-brand-primary)">{{ thresholdsLabel }}</h2>
+      <p class="mt-2 text-xs" style="color: var(--color-text-muted)">{{ editThresholdHint }}</p>
+      <div class="mt-4 grid gap-5 lg:grid-cols-2">
+        <div>
+          @if (!thresholds().length) {
+          <p class="text-sm" style="color: var(--color-text-muted)">{{ emptyThresholds }}</p>
+          } @else {
+          <ul class="space-y-2">
+            @for (th of thresholds(); track th.type + th.iotMac) {
+            <li>
+              <button type="button" (click)="selectThreshold(th)" class="flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left text-sm transition hover:opacity-90" style="border-color: var(--color-border-subtle); background: var(--color-bg-soft-2)">
+                <span class="font-medium" style="color: var(--color-text-primary)">{{ sensorTypeLabel(th.type) }}</span>
+                <span style="color: var(--color-text-secondary)">{{ th.min | number:'1.0-1' }} – {{ th.max | number:'1.0-1' }}</span>
+              </button>
+            </li>
+            }
+          </ul>
+          }
+        </div>
+        <form [formGroup]="thresholdForm" (ngSubmit)="saveThreshold()" class="flex flex-col gap-3 rounded-xl border p-4" style="border-color: var(--color-border-subtle)">
+          <div>
+            <label class="mb-1 block text-xs" style="color: var(--color-text-muted)">{{ typeLabel }}</label>
+            <select formControlName="type" class="w-full rounded-xl border px-3 py-2.5 text-sm outline-none" style="border-color: var(--color-border-subtle); background: var(--color-bg-surface); color: var(--color-text-primary)">
+              @for (st of sensorTypes; track st) {
+              <option [value]="st">{{ sensorTypeLabel(st) }}</option>
+              }
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="mb-1 block text-xs" style="color: var(--color-text-muted)">{{ minLabel }}</label>
+              <input formControlName="min" type="number" step="any" class="w-full rounded-xl border px-3 py-2.5 text-sm outline-none" style="border-color: var(--color-border-subtle); background: var(--color-bg-surface); color: var(--color-text-primary)" />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs" style="color: var(--color-text-muted)">{{ maxLabel }}</label>
+              <input formControlName="max" type="number" step="any" class="w-full rounded-xl border px-3 py-2.5 text-sm outline-none" style="border-color: var(--color-border-subtle); background: var(--color-bg-surface); color: var(--color-text-primary)" />
+            </div>
+          </div>
+          <div>
+            <label class="mb-1 block text-xs" style="color: var(--color-text-muted)">{{ descLabel }}</label>
+            <input formControlName="description" class="w-full rounded-xl border px-3 py-2.5 text-sm outline-none" style="border-color: var(--color-border-subtle); background: var(--color-bg-surface); color: var(--color-text-primary)" />
+          </div>
+          @if (thresholdMsg()) {
+          <p class="text-sm" [style.color]="thresholdMsgOk() ? 'var(--color-success)' : 'var(--color-danger)'">{{ thresholdMsg() }}</p>
+          }
+          <button type="submit" [disabled]="thresholdsForbidden() || thresholdForm.invalid || savingThreshold()" class="rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50" style="background: var(--color-brand-primary); color: var(--color-text-inverse)">
+            {{ savingThreshold() ? savingLabel : saveLabel }}
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Readings -->
+    <div class="rounded-[1.5rem] border p-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+      <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--color-brand-primary)">{{ readingsLabel }}</h2>
+      @if (!readings().length) {
+      <p class="mt-4 text-sm" style="color: var(--color-text-muted)">{{ emptyReadings }}</p>
+      } @else {
+      <div class="mt-4 overflow-x-auto">
+        <table class="w-full min-w-[36rem] text-left text-sm">
+          <thead>
+            <tr style="color: var(--color-text-muted)">
+              <th class="pb-2 font-medium">{{ colType }}</th>
+              <th class="pb-2 font-medium">{{ colValue }}</th>
+              <th class="pb-2 font-medium">{{ colDevice }}</th>
+              <th class="pb-2 font-medium">{{ colWhen }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of readings(); track $index) {
+            <tr class="border-t" style="border-color: var(--color-border-subtle)">
+              <td class="py-2.5 font-medium" style="color: var(--color-text-primary)">{{ sensorTypeLabel(r.sensorType || r.label) }}</td>
+              <td class="py-2.5" style="color: var(--color-text-secondary)">{{ r.value | number:'1.0-2' }}{{ r.unit ? ' ' + r.unit : '' }}</td>
+              <td class="py-2.5 font-mono text-xs" style="color: var(--color-text-muted)">{{ r.deviceSerial || '—' }}</td>
+              <td class="py-2.5 whitespace-nowrap" style="color: var(--color-text-muted)">{{ r.recordedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+    }
+  </div>
+</section>

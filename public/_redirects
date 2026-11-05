@@ -1,0 +1,5 @@
+# Intentionally empty of catch-all SPA rules.
+# Cloudflare Pages serves real static files (*.js, *.css) first.
+# SPA deep-link fallback is handled by Pages when no 404.html is present
+# and/or by wrangler pages_build_output_dir — do NOT use "/* /index.html 200"
+# here: CF may ignore it or serve HTML for missing JS paths (MIME errors).

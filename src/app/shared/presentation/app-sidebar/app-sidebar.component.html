@@ -1,0 +1,108 @@
+<aside class="flex h-full w-full flex-col overflow-hidden px-4 py-5 lg:px-5 lg:py-6" style="background: linear-gradient(180deg, #0b2e1c 0%, #123e27 100%); border-right: 1px solid rgba(255,255,255,0.09)">
+  <a routerLink="/dashboard" class="flex items-center gap-3 px-2 pb-5" style="text-decoration: none">
+    <img src="/images/logo/smartPalmLogo.png" alt="Smart Palm" class="h-12 w-auto object-contain" />
+    <div>
+      <p style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: var(--font-weight-bold); color: var(--color-brand-secondary)">
+        Smart Palm
+      </p>
+      <p style="font-family: var(--font-body); font-size: 0.8rem; color: var(--color-white-60)">
+        {{ operationsCenterLabel }}
+      </p>
+    </div>
+  </a>
+
+  @if (currentUser; as user) {
+  <div class="mb-6 flex items-center gap-3 rounded-[1.6rem] px-3 py-3" style="background: rgba(255,255,255,0.07); border: 1px solid var(--color-white-12)">
+    <span class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border" style="border-color: rgba(255,255,255,0.14); background: rgba(255,255,255,0.08)">
+      <img [src]="userRoleImage" [alt]="user.role" class="h-full w-full object-cover" />
+    </span>
+    <div class="min-w-0">
+      <p class="truncate" style="font-family: var(--font-heading); font-size: 0.96rem; color: var(--color-text-inverse)">
+        {{ user.fullName }}
+      </p>
+      <p data-testid="sidebar-role-label" style="font-family: var(--font-body); font-size: 0.78rem; color: var(--color-white-60)">
+        {{ roleLabel }}
+      </p>
+    </div>
+  </div>
+  }
+
+  <nav class="space-y-1.5">
+    @for (item of primaryItems; track item.id) {
+    <a
+      [routerLink]="item.route"
+      #rla="routerLinkActive"
+      routerLinkActive
+      [routerLinkActiveOptions]="{ exact: item.exact !== false }"
+      class="flex items-center gap-3 rounded-[1.15rem] px-3 py-3 transition-all duration-200 hover:translate-x-0.5"
+      [style.text-decoration]="'none'"
+      [style.background]="rla.isActive ? 'rgba(255,255,255,0.14)' : 'transparent'"
+      [style.color]="rla.isActive ? 'var(--color-text-inverse)' : 'var(--color-white-75)'"
+      [style.border-left]="rla.isActive ? '3px solid var(--color-brand-secondary)' : '3px solid transparent'"
+    >
+      <span class="flex h-10 w-10 items-center justify-center rounded-full" style="background: rgba(255,255,255,0.08)">
+        @switch (item.id) {
+          @case ('dashboard') {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+          }
+          @case ('monitoring') {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 5-6"/></svg>
+          }
+          @case ('recommendations') {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+          }
+          @case ('interventions') {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          }
+        }
+      </span>
+      <span style="font-family: var(--font-body); font-size: 0.96rem; font-weight: var(--font-weight-medium)">
+        {{ item.label }}
+      </span>
+    </a>
+    }
+  </nav>
+
+  <div class="mt-6 border-t pt-4" style="border-color: rgba(255,255,255,0.12)">
+    <div class="space-y-1.5">
+      @for (item of accountItems; track item.id) {
+      <a
+        [routerLink]="item.route"
+        #rlaAcct="routerLinkActive"
+        routerLinkActive
+        [routerLinkActiveOptions]="{ exact: item.exact !== false }"
+        class="flex items-center gap-3 rounded-[1.15rem] px-3 py-3 transition-all duration-200 hover:translate-x-0.5"
+        [style.text-decoration]="'none'"
+        [style.background]="rlaAcct.isActive ? 'rgba(255,255,255,0.14)' : 'transparent'"
+        [style.color]="rlaAcct.isActive ? 'var(--color-text-inverse)' : 'var(--color-white-75)'"
+        [style.border-left]="rlaAcct.isActive ? '3px solid var(--color-brand-secondary)' : '3px solid transparent'"
+      >
+        <span class="flex h-10 w-10 items-center justify-center rounded-full" style="background: rgba(255,255,255,0.08)">
+          @switch (item.id) {
+            @case ('subscription') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>
+            }
+            @case ('profile') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+            }
+          }
+        </span>
+        <span style="font-family: var(--font-body); font-size: 0.96rem; font-weight: var(--font-weight-medium)">
+          {{ item.label }}
+        </span>
+      </a>
+      }
+    </div>
+  </div>
+
+  <div class="mt-auto border-t pt-4" style="border-color: rgba(255,255,255,0.12)">
+    <button type="button" (click)="logout()" class="flex w-full items-center gap-3 rounded-[1.15rem] px-3 py-3 text-left transition hover:translate-x-0.5" style="background: transparent; border: none; color: var(--color-white-75); cursor: pointer">
+      <span class="flex h-10 w-10 items-center justify-center rounded-full" style="background: rgba(255,255,255,0.08)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </span>
+      <span style="font-family: var(--font-body); font-size: 0.96rem; font-weight: var(--font-weight-medium)">
+        {{ logoutLabel }}
+      </span>
+    </button>
+  </div>
+</aside>

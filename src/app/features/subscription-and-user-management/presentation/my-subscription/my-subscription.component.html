@@ -1,0 +1,311 @@
+<section class="min-h-dvh px-6 py-8 sm:px-8 lg:px-10 lg:py-10" style="background: var(--color-bg-page)">
+  <a routerLink="/dashboard" class="inline-flex text-sm mb-4" style="color: var(--color-brand-primary)">
+    &larr; Dashboard
+  </a>
+  @if (loading()) {
+  <div class="flex min-h-[calc(100dvh-5rem)] flex-col items-center justify-center gap-4">
+    <div class="h-10 w-10 rounded-full border-2 animate-spin" style="border-color: var(--color-border-subtle); border-top-color: var(--color-brand-primary)"></div>
+    <p style="font-family: var(--font-body); font-size: 0.95rem; color: var(--color-text-muted)">Cargando informacion de tu suscripcion...</p>
+  </div>
+  } @else if (error()) {
+  <div class="flex min-h-[calc(100dvh-5rem)] items-center justify-center">
+    <div class="w-full max-w-[34rem] rounded-[1.75rem] border px-6 py-7 text-center" style="background: var(--color-bg-surface); border-color: var(--color-danger); box-shadow: var(--shadow-card)">
+      <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full" style="background: var(--color-danger-10)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h1 class="mb-2" style="font-family: var(--font-heading); font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: var(--font-weight-bold); color: var(--color-text-primary)">
+        Mi suscripcion
+      </h1>
+      <p style="font-family: var(--font-body); font-size: 1rem; line-height: 1.7; color: var(--color-text-secondary)">
+        {{ error() }}
+      </p>
+      <a routerLink="/subscription/plans" class="mt-4 inline-flex rounded-xl px-5 py-3 text-sm font-semibold" style="background: var(--color-brand-primary); color: var(--color-text-inverse)">
+        Ver planes disponibles
+      </a>
+    </div>
+  </div>
+  } @else if (subscription(); as sub) {
+  <div class="mx-auto w-full max-w-[1400px]">
+    <div class="overflow-hidden rounded-[2rem] border" style="background: linear-gradient(145deg, rgba(13, 51, 32, 0.96), rgba(26, 92, 56, 0.92)); border-color: rgba(255,255,255,0.08); box-shadow: 0 28px 60px rgba(7, 25, 15, 0.18)">
+      <div class="grid gap-8 px-6 py-7 sm:px-8 sm:py-8 lg:grid-cols-[1.3fr_0.7fr] lg:px-10 lg:py-10">
+        <div>
+          <p style="font-family: var(--font-heading); font-size: 0.88rem; letter-spacing: 0.2em; color: var(--color-brand-mint)">
+            MI SUSCRIPCION
+          </p>
+          <div class="mt-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 style="font-family: var(--font-heading); font-size: clamp(2.3rem, 4vw, 4rem); font-weight: var(--font-weight-bold); line-height: 0.98; letter-spacing: -0.04em; color: var(--color-text-inverse)">
+                {{ sub.planName }}
+              </h1>
+              <p class="mt-3 max-w-[38rem]" style="font-family: var(--font-body); font-size: 1.02rem; line-height: 1.75; color: var(--color-white-75)">
+                {{ isGrower() ? 'Controla el estado de tu plan, revisa tu capacidad disponible y gestiona la renovacion de manera centralizada.' : 'Supervisa los productores a tu cargo, la capacidad de tu plan y la generacion de reportes tecnicos.' }}
+              </p>
+            </div>
+
+            <div class="inline-flex items-center gap-2 rounded-full px-4 py-2.5" [style.background]="sub.status === 'active' ? 'rgba(76, 205, 130, 0.16)' : 'var(--color-warning-10)'" [style.color]="sub.status === 'active' ? 'var(--color-text-inverse)' : 'var(--color-warning)'" style="font-family: var(--font-body); font-size: 0.95rem; font-weight: var(--font-weight-medium)">
+              <span class="h-2.5 w-2.5 rounded-full" [style.background]="sub.status === 'active' ? 'var(--color-success)' : 'var(--color-warning)'"></span>
+              {{ sub.status === 'active' ? 'Plan activo' : sub.status }}
+            </div>
+          </div>
+
+          <div class="mt-8 grid gap-4 sm:grid-cols-3">
+            <div class="rounded-[1.5rem] px-5 py-5" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08)">
+              <p style="font-family: var(--font-body); font-size: 0.8rem; letter-spacing: 0.14em; color: var(--color-white-60)">VIGENCIA</p>
+              <p class="mt-3" style="font-family: var(--font-heading); font-size: 1.35rem; line-height: 1.2; color: var(--color-text-inverse)">
+                {{ sub.startDate | date:'dd MMM yyyy' }}
+              </p>
+              <p class="mt-1" style="font-family: var(--font-body); font-size: 0.94rem; color: var(--color-white-60)">
+                hasta {{ sub.endDate | date:'dd MMM yyyy' }}
+              </p>
+            </div>
+
+            <div class="rounded-[1.5rem] px-5 py-5" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08)">
+              <p style="font-family: var(--font-body); font-size: 0.8rem; letter-spacing: 0.14em; color: var(--color-white-60)">TIEMPO RESTANTE</p>
+              <p class="mt-3" style="font-family: var(--font-heading); font-size: 2rem; line-height: 1; color: var(--color-text-inverse)">
+                {{ sub.daysRemaining }}
+              </p>
+              <p class="mt-1" style="font-family: var(--font-body); font-size: 0.94rem; color: var(--color-white-60)">
+                dias disponibles en tu ciclo actual
+              </p>
+            </div>
+
+            <div class="rounded-[1.5rem] px-5 py-5" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08)">
+              <p style="font-family: var(--font-body); font-size: 0.8rem; letter-spacing: 0.14em; color: var(--color-white-60)">RENOVACION</p>
+              <p class="mt-3" style="font-family: var(--font-heading); font-size: 1.5rem; line-height: 1.1; color: var(--color-text-inverse)">
+                {{ sub.autoRenew ? 'Automatica' : 'Manual' }}
+              </p>
+              <p class="mt-1" style="font-family: var(--font-body); font-size: 0.94rem; color: var(--color-white-60)">
+                {{ sub.autoRenew ? 'Se renueva al finalizar el periodo.' : 'Requiere accion manual.' }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[1.75rem] px-5 py-5 sm:px-6 sm:py-6" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08)">
+          <p style="font-family: var(--font-heading); font-size: 0.85rem; letter-spacing: 0.18em; color: var(--color-brand-mint)">
+            ACCIONES DEL PLAN
+          </p>
+
+          @if (actionSuccess()) {
+          <div class="mt-5 rounded-2xl px-4 py-3 text-sm" style="background: var(--color-emerald-15); color: var(--color-text-inverse); border: 1px solid var(--color-success); font-family: var(--font-body)">
+            {{ actionSuccess() }}
+          </div>
+          }
+
+          @if (actionError()) {
+          <div class="mt-5 rounded-2xl px-4 py-3 text-sm" style="background: var(--color-danger-10); color: #ffd4d4; border: 1px solid rgba(239, 68, 68, 0.45); font-family: var(--font-body)">
+            {{ actionError() }}
+          </div>
+          }
+
+          <div class="mt-5 space-y-3">
+            <button
+              (click)="renew()"
+              [disabled]="actionLoading() === 'renew'"
+              class="w-full rounded-2xl px-5 py-4 text-left transition disabled:opacity-50 hover:scale-[1.01] active:scale-[0.985]"
+              style="background: linear-gradient(135deg, #67e59a 0%, #4ccd82 58%, #30b86c 100%); color: var(--color-brand-deep); font-family: var(--font-heading); box-shadow: 0 18px 32px rgba(76, 205, 130, 0.22)"
+            >
+              <span class="block" style="font-size: 1.02rem; font-weight: var(--font-weight-bold)">
+                {{ actionLoading() === 'renew' ? 'Renovando...' : 'Renovar suscripcion' }}
+              </span>
+              <span class="mt-1 block" style="font-family: var(--font-body); font-size: 0.92rem; color: rgba(13, 51, 32, 0.78)">
+                Extiende tu acceso por un periodo adicional.
+              </span>
+            </button>
+
+            <a
+              routerLink="/subscription/plans"
+              class="w-full rounded-2xl px-5 py-4 text-left transition hover:scale-[1.01] active:scale-[0.985] flex items-center justify-between"
+              style="background: linear-gradient(135deg, rgba(245,158,11,0.25) 0%, rgba(245,158,11,0.18) 100%); color: var(--color-warning); font-family: var(--font-heading); border: 1px solid rgba(245,158,11,0.35)"
+            >
+              <div>
+                <span class="block" style="font-size: 1.02rem; font-weight: var(--font-weight-bold)">
+                  Cambiar de plan
+                </span>
+                <span class="mt-1 block" style="font-family: var(--font-body); font-size: 0.92rem; color: rgba(245,158,11,0.8)">
+                  Explora otros planes disponibles para tu segmento.
+                </span>
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+
+            <button
+              (click)="cancel()"
+              [disabled]="actionLoading() === 'cancel'"
+              class="w-full rounded-2xl border px-5 py-4 text-left transition disabled:opacity-50 hover:scale-[1.01] active:scale-[0.985]"
+              style="background: rgba(255,255,255,0.03); color: var(--color-text-inverse); font-family: var(--font-heading); border-color: rgba(239, 68, 68, 0.45)"
+            >
+              <span class="block" style="font-size: 1.02rem; font-weight: var(--font-weight-bold)">
+                {{ actionLoading() === 'cancel' ? 'Cancelando...' : 'Desactivar renovacion' }}
+              </span>
+              <span class="mt-1 block" style="font-family: var(--font-body); font-size: 0.92rem; color: var(--color-white-60)">
+                Mantendras el acceso hasta la fecha de vencimiento.
+              </span>
+            </button>
+          </div>
+
+          <div class="mt-6 rounded-[1.4rem] px-4 py-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08)">
+            <p style="font-family: var(--font-body); font-size: 0.8rem; letter-spacing: 0.12em; color: var(--color-white-60)">
+              RESUMEN RAPIDO
+            </p>
+            <div class="mt-3 space-y-2.5" style="font-family: var(--font-body); font-size: 0.94rem; color: var(--color-white-75)">
+              <div class="flex items-center justify-between gap-3">
+                <span>Estado</span>
+                <span>{{ sub.status === 'active' ? 'Activo' : sub.status }}</span>
+              </div>
+              @if (isGrower()) {
+              <div class="flex items-center justify-between gap-3">
+                <span>Hectareas maximas</span>
+                <span>{{ sub.maxHectares }} hect.</span>
+              </div>
+              <div class="flex items-center justify-between gap-3">
+                <span>Dispositivos maximos</span>
+                <span>{{ sub.maxDevices }}</span>
+              </div>
+              } @else {
+              <div class="flex items-center justify-between gap-3">
+                <span>Productores maximos</span>
+                <span>{{ sub.maxGrowers === 999 ? 'Ilimitado' : sub.maxGrowers }}</span>
+              </div>
+              <div class="flex items-center justify-between gap-3">
+                <span>Reportes maximos</span>
+                <span>{{ sub.maxReports === 999 ? 'Ilimitados' : sub.maxReports }}/mes</span>
+              </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+      <div class="rounded-[1.9rem] border px-6 py-6 sm:px-7 sm:py-7" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <p style="font-family: var(--font-heading); font-size: 0.86rem; letter-spacing: 0.18em; color: var(--color-text-muted)">
+              CAPACIDAD DEL PLAN
+            </p>
+            <h2 class="mt-2" style="font-family: var(--font-heading); font-size: clamp(1.65rem, 2.5vw, 2.35rem); font-weight: var(--font-weight-bold); color: var(--color-text-primary)">
+              Uso actual de recursos
+            </h2>
+          </div>
+          <div class="hidden sm:flex h-14 w-14 items-center justify-center rounded-full" style="background: var(--color-bg-soft-2)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M7 10c0-3 2.5-5 5-8 2.5 3 5 5 5 8a5 5 0 0 1-10 0Z"/></svg>
+          </div>
+        </div>
+
+        <div class="mt-8 space-y-7">
+          @if (isGrower()) {
+          <div>
+            <div class="mb-3 flex items-end justify-between gap-3">
+              <div>
+                <p style="font-family: var(--font-body); font-size: 0.92rem; color: var(--color-text-secondary)">Hectareas monitoreadas</p>
+                <p class="mt-1" style="font-family: var(--font-heading); font-size: 1.7rem; font-weight: var(--font-weight-bold); color: var(--color-text-primary)">
+                  {{ sub.usedHectares }} / {{ sub.maxHectares }} hect.
+                </p>
+              </div>
+              <p style="font-family: var(--font-body); font-size: 0.92rem; color: var(--color-text-muted)">
+                {{ ((sub.usedHectares / sub.maxHectares) * 100).toFixed(0) }}%
+              </p>
+            </div>
+            <div class="h-3 overflow-hidden rounded-full" style="background: var(--color-bg-soft)">
+              <div class="h-full rounded-full transition-all duration-500" style="width: {{ (sub.usedHectares / sub.maxHectares) * 100 }}%; background: linear-gradient(90deg, #1e7a47 0%, #4ccd82 100%)"></div>
+            </div>
+          </div>
+          <div>
+            <div class="mb-3 flex items-end justify-between gap-3">
+              <div>
+                <p style="font-family: var(--font-body); font-size: 0.92rem; color: var(--color-text-secondary)">Dispositivos conectados</p>
+                <p class="mt-1" style="font-family: var(--font-heading); font-size: 1.7rem; font-weight: var(--font-weight-bold); color: var(--color-text-primary)">
+                  {{ sub.usedDevices }} / {{ sub.maxDevices }}
+                </p>
+              </div>
+              <p style="font-family: var(--font-body); font-size: 0.92rem; color: var(--color-text-muted)">
+                {{ ((sub.usedDevices / sub.maxDevices) * 100).toFixed(0) }}%
+              </p>
+            </div>
+            <div class="h-3 overflow-hidden rounded-full" style="background: var(--color-bg-soft)">
+              <div class="h-full rounded-full transition-all duration-500" style="width: {{ (sub.usedDevices / sub.maxDevices) * 100 }}%; background: linear-gradient(90deg, #0ea5b8 0%, #22d3e8 100%)"></div>
+            </div>
+          </div>
+          } @else {
+          <div>
+            <div class="mb-3 flex items-end justify-between gap-3">
+              <div>
+                <p style="font-family: var(--font-body); font-size: 0.92rem; color: var(--color-text-secondary)">Productores gestionados</p>
+                <p class="mt-1" style="font-family: var(--font-heading); font-size: 1.7rem; font-weight: var(--font-weight-bold); color: var(--color-text-primary)">
+                  {{ sub.usedGrowers }} / {{ sub.maxGrowers === 999 ? 'IL' : sub.maxGrowers }}
+                </p>
+              </div>
+              <p style="font-family: var(--font-body); font-size: 0.92rem; color: var(--color-text-muted)">
+                {{ sub.maxGrowers === 999 ? '' : ((sub.usedGrowers! / sub.maxGrowers!) * 100).toFixed(0) + '%' }}
+              </p>
+            </div>
+            <div class="h-3 overflow-hidden rounded-full" style="background: var(--color-bg-soft)">
+              <div class="h-full rounded-full transition-all duration-500" style="width: {{ sub.maxGrowers === 999 ? '100' : (sub.usedGrowers! / sub.maxGrowers!) * 100 }}%; background: linear-gradient(90deg, #9333ea 0%, #c084fc 100%)"></div>
+            </div>
+          </div>
+          <div>
+            <div class="mb-3 flex items-end justify-between gap-3">
+              <div>
+                <p style="font-family: var(--font-body); font-size: 0.92rem; color: var(--color-text-secondary)">Reportes generados</p>
+                <p class="mt-1" style="font-family: var(--font-heading); font-size: 1.7rem; font-weight: var(--font-weight-bold); color: var(--color-text-primary)">
+                  {{ sub.usedReports }} / {{ sub.maxReports === 999 ? 'IL' : sub.maxReports }}
+                </p>
+              </div>
+              <p style="font-family: var(--font-body); font-size: 0.92rem; color: var(--color-text-muted)">
+                {{ sub.maxReports === 999 ? '' : ((sub.usedReports! / sub.maxReports!) * 100).toFixed(0) + '%' }}
+              </p>
+            </div>
+            <div class="h-3 overflow-hidden rounded-full" style="background: var(--color-bg-soft)">
+              <div class="h-full rounded-full transition-all duration-500" style="width: {{ sub.maxReports === 999 ? '100' : (sub.usedReports! / sub.maxReports!) * 100 }}%; background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)"></div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-1">
+        <div class="rounded-[1.9rem] border px-6 py-6" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+          <p style="font-family: var(--font-heading); font-size: 0.86rem; letter-spacing: 0.18em; color: var(--color-text-muted)">
+            ESTADO DEL PLAN
+          </p>
+          <div class="mt-4 flex items-start gap-4">
+            <span class="flex h-12 w-12 items-center justify-center rounded-full" style="background: var(--color-emerald-15)">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <div>
+              <p style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: var(--font-weight-bold); color: var(--color-text-primary)">
+                {{ sub.autoRenew ? 'Renovacion automatica activada' : 'Renovacion automatica desactivada' }}
+              </p>
+              <p class="mt-2" style="font-family: var(--font-body); font-size: 0.95rem; line-height: 1.7; color: var(--color-text-secondary)">
+                {{ sub.autoRenew ? 'Tu cuenta se mantendra activa automaticamente al finalizar el periodo actual.' : 'Tu acceso continuara hasta la fecha de vencimiento y no se renovara automaticamente.' }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[1.9rem] border px-6 py-6" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+          <p style="font-family: var(--font-heading); font-size: 0.86rem; letter-spacing: 0.18em; color: var(--color-text-muted)">
+            CICLO ACTUAL
+          </p>
+          <div class="mt-4 space-y-3" style="font-family: var(--font-body); font-size: 0.96rem; color: var(--color-text-secondary)">
+            <div class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3" style="background: var(--color-bg-soft)">
+              <span>Inicio</span>
+              <strong style="font-family: var(--font-heading); color: var(--color-text-primary)">{{ sub.startDate | date:'dd/MM/yyyy' }}</strong>
+            </div>
+            <div class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3" style="background: var(--color-bg-soft)">
+              <span>Fin</span>
+              <strong style="font-family: var(--font-heading); color: var(--color-text-primary)">{{ sub.endDate | date:'dd/MM/yyyy' }}</strong>
+            </div>
+            <div class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3" style="background: var(--color-bg-soft)">
+              <span>Estado</span>
+              <strong style="font-family: var(--font-heading); color: var(--color-text-primary)">{{ sub.status === 'active' ? 'Activo' : sub.status }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</section>

@@ -1,0 +1,148 @@
+<section class="min-h-dvh px-6 py-8 sm:px-8 lg:px-10 lg:py-10" style="background: var(--color-bg-page)">
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <a routerLink="/recomendaciones" class="text-sm" style="color: var(--color-brand-primary)">
+      &larr; Volver a recomendaciones
+    </a>
+
+    @if (loading()) {
+    <div class="flex min-h-60 flex-col items-center justify-center gap-3 rounded-[1.75rem] border px-6 py-10" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle)">
+      <div class="h-8 w-8 animate-spin rounded-full border-2" style="border-color: var(--color-border-subtle); border-top-color: var(--color-brand-primary)"></div>
+      <p style="color: var(--color-text-muted)">Cargando detalle...</p>
+    </div>
+    } @else if (error()) {
+    <div class="rounded-2xl border px-5 py-4 text-sm" style="background: var(--color-danger-10); color: var(--color-danger); border-color: var(--color-danger)">
+      {{ error() }}
+    </div>
+    } @else if (recommendation(); as rec) {
+    <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <div class="rounded-[1.75rem] border px-6 py-6 sm:px-8" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="rounded-full px-3 py-1 text-xs font-medium uppercase" [style.background]="priorityColors[rec.priority] + '20'" [style.color]="priorityColors[rec.priority]">
+            {{ priorityLabels[rec.priority] }}
+          </span>
+          <span class="rounded-full px-3 py-1 text-xs font-medium" [style.background]="statusColors[rec.status] + '18'" [style.color]="statusColors[rec.status]">
+            {{ statusLabels[rec.status] }}
+          </span>
+          <span class="text-xs" style="color: var(--color-text-muted)">
+            {{ rec.generatedBy === 'ai' ? 'Generada por IA' : 'Redactada por agronomo' }}
+          </span>
+        </div>
+
+        <h1 class="mt-4" style="font-family: var(--font-heading); font-size: clamp(2rem, 3vw, 3rem); font-weight: var(--font-weight-bold); color: var(--color-text-primary)">
+          {{ rec.title }}
+        </h1>
+        <p class="mt-2" style="color: var(--color-text-secondary)">
+          {{ rec.plantationName }} &middot; {{ rec.zoneName }}
+        </p>
+
+        <div class="mt-6">
+          <h2 class="font-semibold" style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--color-text-primary)">Descripcion</h2>
+          <p class="mt-2 leading-relaxed" style="color: var(--color-text-secondary)">{{ rec.description }}</p>
+        </div>
+
+        <div class="mt-6">
+          <h2 class="font-semibold" style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--color-text-primary)">Accion recomendada</h2>
+          <div class="mt-2 rounded-2xl border px-5 py-4" style="border-color: var(--color-brand-primary); background: var(--color-bg-soft-2)">
+            <p class="font-semibold" style="color: var(--color-brand-primary)">{{ rec.recommendedAction }}</p>
+          </div>
+        </div>
+
+        @if (rec.alertId) {
+        <div class="mt-6">
+          <h2 class="font-semibold" style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--color-text-primary)">Alerta relacionada</h2>
+          <a [routerLink]="['/alertas', rec.alertId]" class="mt-2 inline-flex rounded-xl border px-4 py-3 text-sm font-semibold transition" style="border-color: var(--color-border-subtle); color: var(--color-text-secondary)">
+            {{ rec.alertTitle }} &rarr;
+          </a>
+        </div>
+        }
+
+        @if (rec.alertId && linkedAlert(); as alert) {
+        <div class="mt-6">
+          <h2 class="font-semibold" style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--color-text-primary)">Datos del sensor</h2>
+          <div class="mt-3 rounded-2xl border px-5 py-4" style="border-color: var(--color-border-subtle); background: var(--color-bg-soft-2)">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs uppercase tracking-wider" style="color: var(--color-text-muted)">{{ alert.label }}</p>
+                <p class="mt-1 text-2xl font-bold" [style.color]="alert.alertLevel === 'critical' ? 'var(--color-danger)' : 'var(--color-warning)'">
+                  {{ alert.triggeredValue }}
+                  <span class="text-sm font-normal" style="color: var(--color-text-muted)">
+                    {{ alert.variableType === 'temperature' ? '°C' : alert.variableType === 'soil_humidity' ? '%' : '' }}
+                  </span>
+                </p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs" style="color: var(--color-text-muted)">Rango esperado</p>
+                <p class="mt-1 text-sm font-semibold" style="color: var(--color-text-primary)">
+                  {{ alert.thresholdMin }} - {{ alert.thresholdMax }}
+                  <span class="font-normal" style="color: var(--color-text-muted)">
+                    {{ alert.variableType === 'temperature' ? '°C' : alert.variableType === 'soil_humidity' ? '%' : '' }}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-3 h-2 w-full rounded-full overflow-hidden relative" style="background: var(--color-bg-surface)">
+              @if (computeBarPosition(alert); as bar) {
+              <div class="absolute top-0 h-full rounded-full" [style.background]="bar.color" [style.left]="bar.left" [style.width]="bar.width"></div>
+              <div class="absolute top-0 h-full rounded-full" [style.background]="bar.color + '40'" [style.left]="bar.rangeStart" [style.width]="bar.rangeWidth"></div>
+              }
+            </div>
+          </div>
+        </div>
+        }
+
+        @if (isAgronomist()) {
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+          @if (rec.status === 'pending_review') {
+          <button type="button" (click)="approve()" [disabled]="actionLoading() !== ''" class="rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-50" style="background: var(--color-brand-primary); color: var(--color-text-inverse)">
+            {{ actionLoading() === 'approve' ? 'Aprobando...' : 'Aprobar recomendacion' }}
+          </button>
+          }
+          @if (rec.status === 'approved') {
+          <button type="button" (click)="publish()" [disabled]="actionLoading() !== ''" class="rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-50" style="background: var(--color-brand-primary); color: var(--color-text-inverse)">
+            {{ actionLoading() === 'publish' ? 'Publicando...' : 'Publicar recomendacion' }}
+          </button>
+          }
+        </div>
+        }
+
+        @if (actionError()) {
+        <div class="mt-4 rounded-2xl border px-4 py-3 text-sm" style="background: var(--color-danger-10); color: var(--color-danger); border-color: var(--color-danger)">
+          {{ actionError() }}
+        </div>
+        }
+
+        @if (actionSuccess()) {
+        <div class="mt-4 rounded-2xl border px-4 py-3 text-sm" style="background: var(--color-emerald-15); color: var(--color-success); border-color: var(--color-success)">
+          {{ actionSuccess() }}
+        </div>
+        }
+      </div>
+
+      <div class="rounded-[1.75rem] border px-6 py-6" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <p class="text-xs uppercase tracking-[0.18em]" style="color: var(--color-text-muted)">Resumen</p>
+        <h2 class="mt-3" style="font-family: var(--font-heading); font-size: 1.6rem; color: var(--color-text-primary)">Informacion de publicacion</h2>
+
+        <div class="mt-5 flex flex-col gap-4">
+          <div class="rounded-2xl px-4 py-4" style="background: var(--color-bg-soft-2)">
+            <p style="color: var(--color-text-muted)">Plantacion</p>
+            <p class="mt-1 font-semibold" style="color: var(--color-text-primary)">{{ rec.plantationName }}</p>
+          </div>
+          <div class="rounded-2xl px-4 py-4" style="background: var(--color-bg-soft-cyan)">
+            <p style="color: var(--color-text-muted)">Zona</p>
+            <p class="mt-1 font-semibold" style="color: var(--color-text-primary)">{{ rec.zoneName }}</p>
+          </div>
+          <div class="rounded-2xl px-4 py-4" style="background: var(--color-bg-soft-2)">
+            <p style="color: var(--color-text-muted)">Revisada por</p>
+            <p class="mt-1 font-semibold" style="color: var(--color-text-primary)">{{ rec.reviewedByAgronomistName || 'Pendiente de revision' }}</p>
+          </div>
+          <div class="rounded-2xl px-4 py-4" style="background: var(--color-bg-soft-cyan)">
+            <p style="color: var(--color-text-muted)">Publicada el</p>
+            <p class="mt-1 font-semibold" style="color: var(--color-text-primary)">{{ rec.publishedAt ? (rec.publishedAt | date:'medium') : 'No publicada' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+</section>

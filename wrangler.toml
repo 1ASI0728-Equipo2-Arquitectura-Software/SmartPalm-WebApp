@@ -1,0 +1,6 @@
+# Cloudflare Pages
+# Dashboard "Build output directory" must match:
+#   dist/cloudflare
+name = "webapp-test"
+compatibility_date = "2025-07-01"
+pages_build_output_dir = "dist/cloudflare"

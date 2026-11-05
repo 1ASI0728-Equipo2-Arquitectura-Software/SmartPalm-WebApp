@@ -1,0 +1,132 @@
+:root {
+  /* Typography */
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+
+  --font-size-display: 3.75rem;
+  --line-height-display: 4.125rem;
+
+  --font-size-h1: 2.75rem;
+  --line-height-h1: 3.1625rem;
+
+  --font-size-h2: 1.25rem;
+  --line-height-h2: 1.4375rem;
+
+  --font-size-h3: 1rem;
+  --line-height-h3: 1.15rem;
+
+  --font-size-body: 0.875rem;
+  --line-height-body: 1.4rem;
+
+  --font-size-small: 0.70625rem;
+  --line-height-small: 1.133rem;
+
+  --font-size-label: 0.8rem;
+  --line-height-label: 1.28rem;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-label: 0.08em;
+  --letter-spacing-badge: 0.06em;
+
+  /* Brand */
+  --color-brand-primary: #1e7a47;
+  --color-brand-secondary: #4ccd82;
+  --color-brand-deep: #0d3320;
+  --color-brand-dark: #1a5c38;
+  --color-brand-mint: #a8f0c6;
+
+  /* Accent */
+  --color-accent-cyan: #0ea5b8;
+  --color-accent-cyan-bright: #22d3e8;
+
+  /* Status */
+  --color-success: #4ccd82;
+  --color-warning: #f59e0b;
+  --color-warning-soft: #fbbf24;
+  --color-danger: #ef4444;
+
+  /* Neutrals */
+  --color-bg-page: #f6faf7;
+  --color-bg-surface: #ffffff;
+  --color-bg-soft: #eef5f1;
+  --color-bg-soft-2: #f0fdf7;
+  --color-bg-soft-cyan: #cff9fe;
+
+  --color-text-primary: #123524;
+  --color-text-secondary: #4b635a;
+  --color-text-muted: #94a89d;
+  --color-text-inverse: #ffffff;
+
+  --color-border-subtle: #e2e8e4;
+  --color-border-soft: #dce7df;
+
+  /* Transparent overlays */
+  --color-white-04: rgba(255, 255, 255, 0.04);
+  --color-white-06: rgba(255, 255, 255, 0.06);
+  --color-white-08: rgba(255, 255, 255, 0.08);
+  --color-white-12: rgba(255, 255, 255, 0.12);
+  --color-white-40: rgba(255, 255, 255, 0.4);
+  --color-white-60: rgba(255, 255, 255, 0.6);
+  --color-white-75: rgba(255, 255, 255, 0.75);
+  --color-black-30: rgba(0, 0, 0, 0.3);
+
+  --color-emerald-15: rgba(76, 205, 130, 0.15);
+  --color-emerald-30: rgba(76, 205, 130, 0.3);
+  --color-cyan-10: rgba(14, 165, 184, 0.1);
+  --color-warning-10: rgba(245, 158, 11, 0.1);
+  --color-danger-10: rgba(239, 68, 68, 0.1);
+
+  /* Gradients */
+  --gradient-hero: linear-gradient(
+    150deg,
+    #0d3320 0%,
+    #1a5c38 40%,
+    #1e7a47 75%,
+    #1a6b50 100%
+  );
+
+  /* Spacing */
+  --space-xxs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.625rem;
+  --space-md: 0.875rem;
+  --space-lg: 1rem;
+  --space-xl: 1.25rem;
+  --space-2xl: 1.5rem;
+  --space-3xl: 3rem;
+  --space-4xl: 3.5rem;
+
+  /* Radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-pill: 999px;
+
+  /* Shadows / blur */
+  --shadow-card: 0 16px 40px rgba(0, 0, 0, 0.08);
+  --shadow-hero-card: 0 32px 40px rgba(0, 0, 0, 0.3);
+  --shadow-cta: 0 4px 10px rgba(245, 158, 11, 0.35);
+  --blur-glass: blur(10px);
+
+  /* Layout */
+  --container-max: 1180px;
+  --container-content: 1132px;
+  --mobile-content-max: 24rem;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

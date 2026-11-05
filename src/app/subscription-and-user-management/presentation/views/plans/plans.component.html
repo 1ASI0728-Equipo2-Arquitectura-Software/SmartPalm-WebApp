@@ -1,0 +1,92 @@
+<section class="min-h-dvh overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10" style="background: var(--color-bg-page)">
+  <div class="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <a routerLink="/dashboard" class="w-fit text-sm font-medium" style="color: var(--color-brand-primary)">
+        &larr; {{ backDashboardLabel() }}
+      </a>
+      <a routerLink="/subscription/me" class="text-sm font-semibold" style="color: var(--color-brand-primary)">
+        {{ mySubLabel() }} →
+      </a>
+    </div>
+
+    <div class="overflow-hidden rounded-[1.75rem] border px-6 py-7 sm:px-8" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+      <p class="truncate text-xs font-medium uppercase tracking-[0.18em]" style="color: var(--color-text-muted)">{{ eyebrowLabel() }}</p>
+      <h1 class="mt-1" style="font-family: var(--font-heading); font-size: clamp(2rem, 3vw, 3rem); font-weight: var(--font-weight-bold); color: var(--color-text-primary); line-height: 1.05">
+        {{ headingLabel() }}
+      </h1>
+      <p class="mt-2 max-w-3xl text-base leading-7" style="color: var(--color-text-secondary)">{{ subtitle() }}</p>
+      <p class="mt-3 text-sm" style="color: var(--color-text-muted)">{{ catalogNote() }}</p>
+    </div>
+
+    @if (loading()) {
+    <div class="flex min-h-60 flex-col items-center justify-center gap-3 rounded-[1.75rem] border px-6 py-10" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle)">
+      <div class="h-8 w-8 animate-spin rounded-full border-2" style="border-color: var(--color-border-subtle); border-top-color: var(--color-brand-primary)"></div>
+      <p class="text-sm" style="color: var(--color-text-muted)">{{ loadingLabel() }}</p>
+    </div>
+    } @else if (error()) {
+    <div class="rounded-2xl border px-5 py-4 text-sm" style="background: var(--color-danger-10); color: var(--color-danger); border-color: var(--color-danger)">{{ error() }}</div>
+    } @else {
+    <div class="grid min-w-0 gap-5 md:grid-cols-2 xl:grid-cols-3">
+      @for (plan of plans(); track plan.id) {
+      <div class="relative min-w-0 overflow-hidden rounded-[1.75rem] border p-6 sm:p-7 transition"
+        style="background: var(--color-bg-surface); box-shadow: var(--shadow-card)"
+        [style.border-color]="isCurrent(plan) ? 'var(--color-brand-secondary)' : 'var(--color-border-subtle)'">
+        @if (isCurrent(plan)) {
+        <div class="absolute top-0 right-0 rounded-bl-xl px-4 py-1.5 text-xs font-semibold tracking-wide" style="background: var(--color-emerald-15); color: var(--color-success); font-family: var(--font-heading)">
+          {{ currentPlanBadgeLabel() }}
+        </div>
+        }
+
+        <h2 class="break-words text-xl font-bold" style="font-family: var(--font-heading); color: var(--color-text-primary)">{{ plan.name }}</h2>
+        <p class="mt-1 truncate text-sm" style="color: var(--color-text-muted)">{{ billingLabel(plan.billingCycle) }}</p>
+
+        <div class="mt-5 flex items-end gap-1">
+          <span style="font-family: var(--font-heading); font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: var(--font-weight-bold); color: var(--color-brand-primary); line-height: 1">
+            {{ plan.priceMonthly | currency:(plan.priceCurrency || 'USD'):'symbol':'1.0-0' }}
+          </span>
+          <span class="text-sm" style="color: var(--color-text-muted)">{{ perMonthLabel() }}</span>
+        </div>
+
+        <div class="mt-5 flex flex-wrap gap-2">
+          <span class="rounded-full px-3 py-1.5 text-xs font-medium" style="background: var(--color-bg-soft-2); color: var(--color-brand-dark)">
+            {{ hectaresLimit(plan.maxHectares) }}
+          </span>
+          <span class="rounded-full px-3 py-1.5 text-xs font-medium" style="background: var(--color-bg-soft-cyan); color: var(--color-accent-cyan)">
+            {{ devicesLimit(plan.maxDevices) }}
+          </span>
+          @if (plan.maxReports != null) {
+          <span class="rounded-full px-3 py-1.5 text-xs font-medium" style="background: var(--color-bg-soft-2); color: var(--color-text-secondary)">
+            {{ historyLimit(plan.maxReports) }}
+          </span>
+          }
+        </div>
+
+        <ul class="mt-5 flex flex-col gap-2.5 border-t pt-4" style="border-color: var(--color-border-subtle)">
+          @for (feature of plan.features; track feature) {
+          <li class="flex items-start gap-2.5 text-sm leading-6" style="color: var(--color-text-secondary)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span class="break-words">{{ featureText(feature) }}</span>
+          </li>
+          }
+        </ul>
+
+        <div class="mt-6">
+          @if (isCurrent(plan)) {
+          <button type="button" disabled class="w-full rounded-xl px-5 py-3 text-sm font-semibold opacity-50"
+            style="background: var(--color-bg-soft-2); color: var(--color-text-muted); font-family: var(--font-heading)">
+            {{ currentActionLabel() }}
+          </button>
+          } @else {
+          <div class="w-full rounded-xl px-5 py-3 text-center text-sm" style="background: var(--color-bg-soft-2); color: var(--color-text-muted); font-family: var(--font-body)">
+            {{ contactAdminLabel() }}
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+</section>

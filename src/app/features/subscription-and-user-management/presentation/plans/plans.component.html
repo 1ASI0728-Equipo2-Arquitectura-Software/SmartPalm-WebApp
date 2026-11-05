@@ -1,0 +1,104 @@
+<div class="min-h-dvh px-5 py-6" style="background: var(--color-bg-page)">
+  <div class="mx-auto w-full" style="max-width: var(--mobile-content-max)">
+    <a routerLink="/dashboard" class="inline-flex text-sm mb-4" style="color: var(--color-brand-primary)">
+      &larr; Dashboard
+    </a>
+
+    <h1 class="mb-1" style="font-family: var(--font-heading); font-size: var(--font-size-h2); font-weight: var(--font-weight-bold); color: var(--color-text-primary); line-height: var(--line-height-h2)">
+      Planes de suscripci&oacute;n
+    </h1>
+    <p class="mb-6" style="font-family: var(--font-body); font-size: var(--font-size-body); line-height: var(--line-height-body); color: var(--color-text-secondary)">
+      {{ isAgronomist() ? 'Elige el plan ideal para tu cartera de productores' : 'Elige el plan ideal para tus hectareas' }}
+    </p>
+
+    @if (loading()) {
+    <div class="flex flex-col items-center justify-center pt-20 gap-3">
+      <div class="w-8 h-8 border-2 rounded-full animate-spin" style="border-color: var(--color-border-subtle); border-top-color: var(--color-brand-primary)"></div>
+      <p style="font-family: var(--font-body); font-size: var(--font-size-small); color: var(--color-text-muted)">Cargando planes...</p>
+    </div>
+    } @else if (error()) {
+    <div class="px-4 py-3 rounded-lg text-sm" style="background: var(--color-danger-10); color: var(--color-danger); border: 1px solid var(--color-danger); font-family: var(--font-body)">
+      {{ error() }}
+    </div>
+    } @else {
+    <div class="flex flex-col gap-4">
+      @for (plan of plans(); track plan.id) {
+      <div class="rounded-2xl p-6 relative overflow-hidden transition" style="background: var(--color-bg-surface); box-shadow: var(--shadow-card); border: 2px solid var(--color-border-subtle)"
+        [style.border-color]="plan.id === (isAgronomist() ? 'plan-agro-profesional' : 'plan-cosecha') ? 'var(--color-brand-secondary)' : 'var(--color-border-subtle)'">
+        @if (plan.id === (isAgronomist() ? 'plan-agro-profesional' : 'plan-cosecha')) {
+        <div class="absolute top-0 right-0 px-4 py-1.5 rounded-bl-xl text-xs font-semibold tracking-wide" style="background: var(--color-brand-secondary); color: var(--color-brand-deep); font-family: var(--font-heading); letter-spacing: var(--letter-spacing-badge)">
+          M&Aacute;S POPULAR
+        </div>
+        }
+        @if (plan.id === currentPlanId()) {
+        <div class="absolute top-0 right-0 px-4 py-1.5 rounded-bl-xl text-xs font-semibold tracking-wide" style="background: var(--color-emerald-15); color: var(--color-success); font-family: var(--font-heading); letter-spacing: var(--letter-spacing-badge)">
+          PLAN ACTUAL
+        </div>
+        }
+
+        <h2 class="mb-1" style="font-family: var(--font-heading); font-size: var(--font-size-h3); font-weight: var(--font-weight-bold); color: var(--color-text-primary); line-height: var(--line-height-h3)">
+          {{ plan.name }}
+        </h2>
+        <p class="mb-4" style="font-family: var(--font-body); font-size: var(--font-size-small); color: var(--color-text-muted)">
+          Facturaci&oacute;n {{ plan.billingCycle === 'monthly' ? 'mensual' : plan.billingCycle }}
+        </p>
+
+        <div class="mb-5">
+          <span style="font-family: var(--font-heading); font-size: var(--font-size-display); font-weight: var(--font-weight-bold); color: var(--color-brand-primary); line-height: 1">S/ {{ plan.priceMonthly | number:'1.2-2' }}</span>
+          <span style="font-family: var(--font-body); font-size: var(--font-size-small); color: var(--color-text-muted)">/mes</span>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mb-5">
+          @if (isAgronomist()) {
+          <span class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-bg-soft-2); color: var(--color-brand-dark); font-family: var(--font-body)">
+            {{ plan.maxGrowers === 999 ? 'Ilimitado' : plan.maxGrowers }} productores
+          </span>
+          <span class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-bg-soft-cyan); color: var(--color-accent-cyan); font-family: var(--font-body)">
+            {{ plan.maxReports === 999 ? 'Ilimitados' : plan.maxReports }} reportes/mes
+          </span>
+          } @else {
+          <span class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-bg-soft-2); color: var(--color-brand-dark); font-family: var(--font-body)">
+            {{ plan.maxHectares }} hect.
+          </span>
+          <span class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-bg-soft-cyan); color: var(--color-accent-cyan); font-family: var(--font-body)">
+            {{ plan.maxDevices }} dispositivos
+          </span>
+          }
+        </div>
+
+        <ul class="flex flex-col gap-2.5 border-t pt-4 mb-5" style="border-color: var(--color-border-subtle)">
+          @for (feature of plan.features; track feature) {
+          <li class="flex items-start gap-2.5" style="font-family: var(--font-body); font-size: var(--font-size-small); line-height: var(--line-height-small); color: var(--color-text-secondary)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            {{ feature }}
+          </li>
+          }
+        </ul>
+
+        @if (plan.id === currentPlanId()) {
+        <button type="button" disabled
+          class="w-full py-3.5 rounded-xl font-semibold text-sm opacity-50"
+          style="background: var(--color-bg-soft-2); color: var(--color-text-muted); font-family: var(--font-heading)">
+          Plan actual
+        </button>
+        } @else if (currentPlanId()) {
+        <button type="button" (click)="upgrade(plan.id)" [disabled]="upgrading() !== ''"
+          class="w-full py-3.5 rounded-xl font-semibold text-sm transition disabled:opacity-50 active:scale-[0.98]"
+          style="background: var(--color-brand-primary); color: var(--color-text-inverse); font-family: var(--font-heading)">
+          {{ upgrading() === plan.id ? 'Cambiando...' : 'Cambiar a este plan' }}
+        </button>
+        } @else {
+        <button type="button" (click)="subscribe(plan.id)" [disabled]="subscribing() !== ''"
+          class="w-full py-3.5 rounded-xl font-semibold text-sm transition disabled:opacity-50 active:scale-[0.98]"
+          style="background: var(--color-brand-primary); color: var(--color-text-inverse); font-family: var(--font-heading)">
+          {{ subscribing() === plan.id ? 'Procesando...' : 'Suscribirse' }}
+        </button>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>

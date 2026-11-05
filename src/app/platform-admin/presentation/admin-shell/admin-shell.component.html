@@ -1,0 +1,141 @@
+<div class="min-h-dvh lg:h-dvh" style="background: var(--color-bg-page)">
+  <div class="flex min-h-dvh flex-col lg:h-dvh lg:flex-row">
+    <aside
+      class="flex w-full flex-col overflow-hidden px-4 py-5 lg:h-dvh lg:w-[290px] lg:flex-shrink-0 lg:px-5 lg:py-6"
+      style="background: linear-gradient(180deg, #0b2e1c 0%, #123e27 100%); border-right: 1px solid rgba(255,255,255,0.09)"
+    >
+      <!-- Brand -->
+      <a routerLink="/admin" class="flex items-center gap-3 px-2 pb-5" style="text-decoration: none">
+        <img src="/images/logo/smartPalmLogo.png" alt="Smart Palm" class="h-11 w-auto object-contain" />
+        <div class="min-w-0">
+          <p class="truncate" style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: var(--font-weight-bold); color: var(--color-brand-secondary)">
+            Smart Palm
+          </p>
+          <p class="truncate" style="font-family: var(--font-body); font-size: 0.78rem; color: var(--color-white-60)">
+            {{ brandSub }}
+          </p>
+        </div>
+      </a>
+
+      <!-- User card -->
+      <div class="mb-5 flex items-center gap-3 rounded-[1.5rem] px-3 py-3" style="background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12)">
+        <span
+          class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full"
+          style="background: rgba(76,205,130,0.18); color: var(--color-brand-mint); border: 1px solid rgba(168,240,198,0.25)"
+          aria-hidden="true"
+        >
+          <!-- shield / admin icon -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path d="M9 12l2 2 4-4" />
+          </svg>
+        </span>
+        <div class="min-w-0">
+          <p class="truncate" style="font-family: var(--font-heading); font-size: 0.95rem; color: var(--color-text-inverse)">
+            {{ user()?.fullName || 'Admin' }}
+          </p>
+          <span
+            class="mt-0.5 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+            style="background: rgba(168,240,198,0.14); color: var(--color-brand-mint)"
+          >
+            {{ roleLabel }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex flex-1 flex-col gap-1.5">
+        @for (item of nav(); track item.id) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="admin-nav-active"
+          [routerLinkActiveOptions]="{ exact: item.exact }"
+          class="flex items-center gap-3 rounded-[1.15rem] border-l-[3px] px-3 py-3 text-sm font-medium transition hover:translate-x-0.5 hover:bg-white/10"
+          style="border-left-color: transparent; color: rgba(255,255,255,0.78); text-decoration: none; font-family: var(--font-body)"
+        >
+          <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full" style="background: rgba(255,255,255,0.08)">
+            @switch (item.id) {
+              @case ('home') {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              }
+              @case ('users') {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 0v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              }
+              @case ('growers') {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-7"/><path d="M9 9V5a3 3 0 0 1 6 0v4"/><path d="M7 9h10l1 12H6L7 9Z"/><path d="M12 15a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg>
+              }
+              @case ('access') {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              }
+              @case ('field') {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="m4.93 10.93 4.24 4.24"/><path d="M2 18h6"/><path d="M12 22v-6"/><path d="m19.07 10.93-4.24 4.24"/><path d="M22 18h-6"/><circle cx="12" cy="12" r="2"/></svg>
+              }
+            }
+          </span>
+          <span>{{ item.label }}</span>
+        </a>
+        }
+      </nav>
+
+      <!-- Logout only -->
+      <div class="mt-4 border-t pt-4" style="border-color: rgba(255,255,255,0.12)">
+        <button
+          type="button"
+          (click)="logout()"
+          class="flex w-full items-center gap-3 rounded-[1.15rem] px-3 py-3 text-left text-sm font-semibold transition hover:bg-white/10"
+          style="color: rgba(255,255,255,0.85); font-family: var(--font-body)"
+        >
+          <span class="flex h-9 w-9 items-center justify-center rounded-full" style="background: rgba(255,255,255,0.08)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </span>
+          {{ logoutLabel }}
+        </button>
+      </div>
+    </aside>
+
+    <div class="flex min-w-0 flex-1 flex-col">
+      <!-- Top navbar (deep green, aligned with desk chrome) -->
+      <header
+        class="flex items-center justify-between gap-4 px-4 py-3 sm:px-6"
+        style="background: linear-gradient(90deg, #0d3320 0%, #1a5c38 55%, #1e7a47 100%); border-bottom: 1px solid rgba(255,255,255,0.1)"
+      >
+        <div class="min-w-0">
+          <p class="truncate text-xs font-semibold uppercase tracking-[0.14em]" style="color: var(--color-brand-mint)">
+            {{ brand }}
+          </p>
+          <p class="truncate text-sm font-semibold" style="color: var(--color-text-inverse); font-family: var(--font-heading)">
+            {{ user()?.fullName || 'Admin' }}
+          </p>
+        </div>
+
+        <div class="flex flex-shrink-0 items-center gap-3">
+          <span class="hidden text-xs font-medium sm:inline" style="color: rgba(255,255,255,0.65)">{{ languageLabel }}</span>
+          <button
+            type="button"
+            data-testid="admin-locale-toggle"
+            (click)="switchLanguage()"
+            [attr.aria-label]="toggleLabel"
+            class="relative inline-flex h-11 w-[88px] items-center rounded-full px-1 transition hover:opacity-90"
+            style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.16); color: var(--color-text-inverse); font-family: var(--font-heading)"
+          >
+            <span
+              class="absolute top-1 h-8 w-10 rounded-full transition-all duration-200"
+              [style.left]="localeService.locale() === 'es' ? '4px' : '42px'"
+              style="background: var(--color-brand-secondary); box-shadow: 0 8px 18px rgba(76, 205, 130, 0.28)"
+            ></span>
+            <span class="relative z-10 flex w-full items-center justify-between px-2 text-xs font-bold tracking-wide">
+              <span [style.color]="localeService.locale() === 'es' ? 'var(--color-brand-deep)' : 'rgba(255,255,255,0.55)'">ES</span>
+              <span [style.color]="localeService.locale() === 'en' ? 'var(--color-brand-deep)' : 'rgba(255,255,255,0.55)'">EN</span>
+            </span>
+          </button>
+        </div>
+      </header>
+
+      <main class="min-w-0 flex-1 overflow-auto">
+        <div class="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <router-outlet />
+        </div>
+      </main>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,126 @@
+<section class="min-h-dvh px-6 py-8 sm:px-8 lg:px-10 lg:py-10" style="background: var(--color-bg-page)">
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <a routerLink="/recomendaciones" class="text-sm" style="color: var(--color-brand-primary)">
+      &larr; {{ backLabel }}
+    </a>
+
+    @if (store.recommendationDetailLoading()) {
+    <div class="flex min-h-60 flex-col items-center justify-center gap-3 rounded-[1.75rem] border px-6 py-10" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle)">
+      <div class="h-8 w-8 animate-spin rounded-full border-2" style="border-color: var(--color-border-subtle); border-top-color: var(--color-brand-primary)"></div>
+      <p style="color: var(--color-text-muted)">{{ loadingText }}</p>
+    </div>
+    } @else if (store.recommendationDetailError()) {
+    <div class="rounded-2xl border px-5 py-4 text-sm" style="background: var(--color-danger-10); color: var(--color-danger); border-color: var(--color-danger)">
+      {{ store.recommendationDetailError() }}
+    </div>
+    } @else if (store.recommendationDetail(); as rec) {
+    <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <div class="rounded-[1.75rem] border px-6 py-6 sm:px-8" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="rounded-full px-3 py-1 text-xs font-medium" [style.background]="statusColors[rec.status] + '18'" [style.color]="statusColors[rec.status]">
+            {{ statusLabel(rec.status) }}
+          </span>
+          <span class="rounded-full px-3 py-1 text-xs font-medium" style="background: var(--color-bg-soft-2); color: var(--color-text-muted)">
+            {{ typeLabel(rec.type) }}
+          </span>
+          @if (rec.hasExplicitPriority) {
+          <span class="rounded-full px-3 py-1 text-xs font-medium uppercase" [style.background]="priorityColors[rec.priority] + '20'" [style.color]="priorityColors[rec.priority]">
+            {{ priorityLabel(rec.priority) }}
+          </span>
+          }
+        </div>
+
+        <h1 class="mt-4" style="font-family: var(--font-heading); font-size: clamp(1.75rem, 2.8vw, 2.5rem); font-weight: var(--font-weight-bold); color: var(--color-text-primary)">
+          {{ rec.title }}
+        </h1>
+        <p class="mt-2 text-sm" style="color: var(--color-text-secondary)">
+          {{ rec.scopeLabel }}
+          @if (rec.hasZone) {
+          <span> &middot; {{ rec.zoneName }}</span>
+          }
+        </p>
+
+        <div class="mt-6">
+          <h2 class="font-semibold" style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--color-text-primary)">{{ descriptionLabel }}</h2>
+          <p class="mt-2 whitespace-pre-wrap leading-relaxed" style="color: var(--color-text-secondary)">{{ rec.content }}</p>
+        </div>
+
+        @if (rec.hasExplicitAction) {
+        <div class="mt-6">
+          <h2 class="font-semibold" style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--color-text-primary)">{{ recommendedActionLabel }}</h2>
+          <div class="mt-2 rounded-2xl border px-5 py-4" style="border-color: var(--color-brand-primary); background: var(--color-bg-soft-2)">
+            <p class="font-semibold" style="color: var(--color-brand-primary)">{{ rec.recommendedAction }}</p>
+          </div>
+        </div>
+        }
+
+        @if (store.isAgronomist()) {
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+          @if (rec.status === 'pending_review') {
+          <button type="button" (click)="approve()" [disabled]="store.recommendationActionLoading() !== ''" class="rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-50" style="background: var(--color-brand-primary); color: var(--color-text-inverse)">
+            {{ store.recommendationActionLoading() === 'approve' ? approvingLabel : approveBtnLabel }}
+          </button>
+          }
+          @if (rec.status === 'approved') {
+          <button type="button" (click)="publish()" [disabled]="store.recommendationActionLoading() !== ''" class="rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-50" style="background: var(--color-brand-primary); color: var(--color-text-inverse)">
+            {{ store.recommendationActionLoading() === 'publish' ? publishingLabel : publishBtnLabel }}
+          </button>
+          }
+        </div>
+        }
+
+        @if (store.recommendationActionError()) {
+        <div class="mt-4 rounded-2xl border px-4 py-3 text-sm" style="background: var(--color-danger-10); color: var(--color-danger); border-color: var(--color-danger)">
+          {{ store.recommendationActionError() }}
+        </div>
+        }
+
+        @if (store.recommendationActionSuccess()) {
+        <div class="mt-4 rounded-2xl border px-4 py-3 text-sm" style="background: var(--color-emerald-15); color: var(--color-success); border-color: var(--color-success)">
+          {{ store.recommendationActionSuccess() }}
+        </div>
+        }
+      </div>
+
+      <div class="rounded-[1.75rem] border px-6 py-6" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <p class="text-xs uppercase tracking-[0.18em]" style="color: var(--color-text-muted)">{{ summaryLabel }}</p>
+        <h2 class="mt-3" style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--color-text-primary)">{{ publicationInfoLabel }}</h2>
+
+        <div class="mt-5 flex flex-col gap-4">
+          <div class="rounded-2xl px-4 py-4" style="background: var(--color-bg-soft-2)">
+            <p style="color: var(--color-text-muted)">{{ idLabel }}</p>
+            <p class="mt-1 font-semibold" style="color: var(--color-text-primary)">#{{ rec.id }}</p>
+          </div>
+          <div class="rounded-2xl px-4 py-4" style="background: var(--color-bg-soft-2)">
+            <p style="color: var(--color-text-muted)">{{ scopeFieldLabel }}</p>
+            <p class="mt-1 font-semibold" style="color: var(--color-text-primary)">{{ rec.scopeLabel }}</p>
+          </div>
+          @if (rec.hasZone) {
+          <div class="rounded-2xl px-4 py-4" style="background: var(--color-bg-soft-cyan)">
+            <p style="color: var(--color-text-muted)">{{ zoneLabel }}</p>
+            <p class="mt-1 font-semibold" style="color: var(--color-text-primary)">{{ rec.zoneName }}</p>
+          </div>
+          }
+          <div class="rounded-2xl px-4 py-4" style="background: var(--color-bg-soft-2)">
+            <p style="color: var(--color-text-muted)">{{ reviewedByLabel }}</p>
+            <p class="mt-1 font-semibold" style="color: var(--color-text-primary)">
+              {{ rec.approvedAt ? (rec.reviewedByAgronomistName || agronomistFallback) : pendingReviewLabel }}
+            </p>
+            @if (rec.approvedAt) {
+            <p class="mt-1 text-xs" style="color: var(--color-text-muted)">{{ rec.approvedAt | date:'medium' }}</p>
+            }
+          </div>
+          <div class="rounded-2xl px-4 py-4" style="background: var(--color-bg-soft-cyan)">
+            <p style="color: var(--color-text-muted)">{{ publishedOnLabel }}</p>
+            <p class="mt-1 font-semibold" style="color: var(--color-text-primary)">{{ rec.publishedAt ? (rec.publishedAt | date:'medium') : notPublishedLabel }}</p>
+          </div>
+          <div class="rounded-2xl px-4 py-4" style="background: var(--color-bg-soft-2)">
+            <p style="color: var(--color-text-muted)">{{ createdLabel }}</p>
+            <p class="mt-1 font-semibold" style="color: var(--color-text-primary)">{{ rec.createdAt | date:'medium' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+</section>

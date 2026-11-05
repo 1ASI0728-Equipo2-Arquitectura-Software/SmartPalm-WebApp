@@ -1,0 +1,159 @@
+<div class="relative min-h-dvh overflow-hidden px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10" style="background: var(--gradient-hero)">
+  <div class="absolute inset-0 opacity-[0.08]" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22><path d=%22M40 6 Q55 20 40 40 Q25 60 40 74%22 stroke=%22white%22 fill=%22none%22 stroke-width=%220.8%22 stroke-linecap=%22round%22/></svg>'); background-size: 80px 80px"></div>
+  <div class="absolute -left-16 top-16 h-56 w-56 rounded-full blur-3xl" style="background: var(--color-emerald-30)"></div>
+  <div class="absolute right-[-3rem] top-[18%] h-72 w-72 rounded-full blur-3xl" style="background: rgba(14, 165, 184, 0.16)"></div>
+  <div class="absolute bottom-[-5rem] left-1/2 h-64 w-64 -translate-x-1/2 rounded-full blur-3xl" style="background: rgba(255, 255, 255, 0.08)"></div>
+
+  <div class="relative mx-auto flex w-full max-w-[1180px] justify-end">
+    <button
+      type="button"
+      data-testid="locale-toggle-login"
+      (click)="switchLanguage()"
+      [attr.aria-label]="toggleLabel"
+      class="relative inline-flex h-11 w-[88px] items-center rounded-full px-1 transition hover:opacity-90"
+      style="background: var(--color-white-08); border: 1px solid var(--color-white-12); color: var(--color-text-inverse); font-family: var(--font-heading)"
+    >
+      <span
+        class="absolute top-1 h-8 w-10 rounded-full transition-all duration-200"
+        [style.left]="localeService.locale() === 'es' ? '4px' : '42px'"
+        style="background: var(--color-brand-secondary); box-shadow: 0 8px 18px rgba(76, 205, 130, 0.28)"
+      ></span>
+      <span class="relative z-10 flex w-full items-center justify-between px-2 text-xs font-bold tracking-wide">
+        <span [style.color]="localeService.locale() === 'es' ? 'var(--color-brand-deep)' : 'var(--color-white-60)'">ES</span>
+        <span [style.color]="localeService.locale() === 'en' ? 'var(--color-brand-deep)' : 'var(--color-white-60)'">EN</span>
+      </span>
+    </button>
+  </div>
+
+  <div class="relative mx-auto grid min-h-[calc(100dvh-3rem)] w-full max-w-[1180px] items-center gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
+    <section class="order-2 lg:order-1">
+      <div class="max-w-[38rem] animate-fadeUp" style="animation: fadeUp 0.7s ease-out both">
+          <div class="mb-6 inline-flex items-center gap-3 rounded-full px-4 py-2" style="background: var(--color-white-08); border: 1px solid var(--color-white-12); backdrop-filter: var(--blur-glass)">
+            <span class="h-2.5 w-2.5 rounded-full" style="background: var(--color-brand-secondary); box-shadow: 0 0 0 6px rgba(76, 205, 130, 0.15)"></span>
+            <span style="font-family: var(--font-body); font-size: 0.95rem; color: var(--color-white-75)">
+              {{ heroBadge }}
+            </span>
+          </div>
+
+          <p class="mb-3" style="font-family: var(--font-heading); font-size: 0.95rem; letter-spacing: 0.24em; color: var(--color-brand-mint)">
+            {{ heroEyebrow }}
+          </p>
+          <h1 class="max-w-[11ch]" style="font-family: var(--font-heading); font-size: clamp(3rem, 6vw, 5.4rem); font-weight: var(--font-weight-bold); line-height: 0.96; letter-spacing: -0.04em; color: var(--color-text-inverse)">
+            {{ heroTitle }}
+          </h1>
+
+          <p class="mt-6 max-w-[34rem]" style="font-family: var(--font-body); font-size: clamp(1.05rem, 1.8vw, 1.3rem); line-height: 1.8; color: var(--color-white-75)">
+            {{ heroDescription }}
+          </p>
+
+          <div class="mt-7 flex flex-wrap gap-3">
+            <span class="rounded-full px-4 py-2 text-sm" style="background: rgba(255,255,255,0.08); border: 1px solid var(--color-white-12); color: var(--color-white-75)">
+              {{ featureAlerts }}
+            </span>
+            <span class="rounded-full px-4 py-2 text-sm" style="background: rgba(255,255,255,0.08); border: 1px solid var(--color-white-12); color: var(--color-white-75)">
+              {{ featureRecommendations }}
+            </span>
+            <span class="rounded-full px-4 py-2 text-sm" style="background: rgba(255,255,255,0.08); border: 1px solid var(--color-white-12); color: var(--color-white-75)">
+              {{ featureReports }}
+            </span>
+          </div>
+
+          <div class="mt-8 grid gap-4 sm:grid-cols-3">
+            <div class="rounded-[1.35rem] p-4" style="background: rgba(255,255,255,0.08); border: 1px solid var(--color-white-12); backdrop-filter: blur(12px)">
+              <p style="font-family: var(--font-heading); font-size: 1.8rem; font-weight: var(--font-weight-bold); color: var(--color-text-inverse)">{{ cardAlertsTitle }}</p>
+              <p style="font-family: var(--font-body); font-size: 0.95rem; line-height: 1.55; color: var(--color-white-60)">{{ cardAlertsDesc }}</p>
+            </div>
+            <div class="rounded-[1.35rem] p-4" style="background: rgba(255,255,255,0.08); border: 1px solid var(--color-white-12); backdrop-filter: blur(12px)">
+              <p style="font-family: var(--font-heading); font-size: 1.8rem; font-weight: var(--font-weight-bold); color: var(--color-text-inverse)">{{ cardInspectionsTitle }}</p>
+              <p style="font-family: var(--font-body); font-size: 0.95rem; line-height: 1.55; color: var(--color-white-60)">{{ cardInspectionsDesc }}</p>
+            </div>
+            <div class="rounded-[1.35rem] p-4" style="background: rgba(255,255,255,0.08); border: 1px solid var(--color-white-12); backdrop-filter: blur(12px)">
+              <p style="font-family: var(--font-heading); font-size: 1.8rem; font-weight: var(--font-weight-bold); color: var(--color-text-inverse)">{{ cardReportsTitle }}</p>
+              <p style="font-family: var(--font-body); font-size: 0.95rem; line-height: 1.55; color: var(--color-white-60)">{{ cardReportsDesc }}</p>
+            </div>
+          </div>
+      </div>
+    </section>
+
+    <section class="order-1 lg:order-2">
+      <div class="mx-auto w-full max-w-[32rem] animate-fadeUp" style="animation: fadeUp 0.85s ease-out both">
+        <div class="overflow-hidden rounded-[2rem] p-[1px] shadow-[0_30px_80px_rgba(4,20,12,0.35)]" style="background: linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.08))">
+          <div class="rounded-[calc(2rem-1px)] px-6 py-7 sm:px-8 sm:py-9" style="background: linear-gradient(180deg, rgba(8, 30, 19, 0.54), rgba(10, 38, 24, 0.82)); backdrop-filter: blur(20px)">
+            <div class="mb-7">
+              <p class="mb-2" style="font-family: var(--font-heading); font-size: 0.85rem; letter-spacing: 0.2em; color: var(--color-brand-mint)">
+                {{ formEyebrow }}
+              </p>
+              <h2 class="mb-3" style="font-family: var(--font-heading); font-size: clamp(2rem, 3vw, 2.9rem); font-weight: var(--font-weight-bold); line-height: 1.02; letter-spacing: -0.035em; color: var(--color-text-inverse)">
+                {{ heroHeadline }}
+              </h2>
+              <p style="font-family: var(--font-body); font-size: 1rem; line-height: 1.7; color: var(--color-white-60)">
+                {{ formSubtitle }}
+              </p>
+            </div>
+
+            @if (error()) {
+            <div class="mb-5 rounded-2xl px-4 py-3 text-sm" data-testid="login-error" style="background: var(--color-danger-10); color: #ffd4d4; border: 1px solid rgba(239, 68, 68, 0.45); font-family: var(--font-body)">
+              {{ error() }}
+            </div>
+            }
+
+            <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-5">
+              <div>
+                <label class="mb-2 block" style="font-family: var(--font-body); font-size: 0.85rem; line-height: var(--line-height-label); letter-spacing: 0.12em; color: var(--color-white-60)">
+                  {{ usernameLabel }}
+                </label>
+                <input
+                  formControlName="username"
+                  type="text"
+                  autocomplete="username"
+                  class="w-full rounded-2xl border px-5 py-4 text-[1rem] outline-none transition-all duration-300 focus:ring-2 focus:border-transparent sm:text-[1.05rem]"
+                 style="background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.14); color: var(--color-text-inverse); font-family: var(--font-body); --tw-ring-color: var(--color-brand-secondary); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04)"
+                 [placeholder]="usernamePlaceholder"
+                />
+                @if (hasError('username')) {
+                <p class="mt-2 text-sm" style="font-family: var(--font-body); color: #ffd4d4">
+                  {{ getErrorMessage('username') }}
+                </p>
+                }
+              </div>
+
+              <div>
+                <label class="mb-2 block" style="font-family: var(--font-body); font-size: 0.85rem; line-height: var(--line-height-label); letter-spacing: 0.12em; color: var(--color-white-60)">
+                  {{ passwordLabel }}
+                </label>
+                <input
+                  formControlName="password"
+                  type="password"
+                  autocomplete="current-password"
+                  class="w-full rounded-2xl border px-5 py-4 text-[1rem] outline-none transition-all duration-300 focus:ring-2 focus:border-transparent sm:text-[1.05rem]"
+                 style="background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.14); color: var(--color-text-inverse); font-family: var(--font-body); --tw-ring-color: var(--color-brand-secondary); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04)"
+                 [placeholder]="passwordPlaceholder"
+                />
+                @if (hasError('password')) {
+                <p class="mt-2 text-sm" style="font-family: var(--font-body); color: #ffd4d4">
+                  {{ getErrorMessage('password') }}
+                </p>
+                }
+              </div>
+
+              <button
+                type="submit"
+                [disabled]="form.invalid || loading"
+                class="mt-2 w-full rounded-2xl px-6 py-4 font-bold text-[1rem] transition-all duration-300 disabled:opacity-50 hover:scale-[1.01] hover:brightness-105 active:scale-[0.985] sm:text-[1.08rem]"
+                style="background: linear-gradient(135deg, #67e59a 0%, #4ccd82 55%, #30b86c 100%); color: var(--color-brand-deep); font-family: var(--font-heading); box-shadow: 0 18px 38px rgba(76, 205, 130, 0.3)"
+              >
+                {{ submitLabel }}
+              </button>
+            </form>
+
+            <div class="mt-6 flex flex-col items-center gap-3 text-center" style="font-family: var(--font-body)">
+              <p style="font-size: 0.9rem; line-height: 1.55; color: var(--color-white-60); max-width: 22rem">
+                {{ noPublicRegisterHint }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

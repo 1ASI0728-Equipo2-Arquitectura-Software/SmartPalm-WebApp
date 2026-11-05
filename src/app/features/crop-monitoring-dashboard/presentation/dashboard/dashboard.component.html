@@ -1,0 +1,315 @@
+<section class="min-h-dvh px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10" style="background: var(--color-bg-page)">
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-5">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div>
+        <h1 style="font-family: var(--font-heading); font-size: clamp(1.8rem, 2.5vw, 2.5rem); font-weight: var(--font-weight-bold); line-height: 1.1; color: var(--color-text-primary)">
+          {{ isAgronomist() ? 'Supervision de cultivos' : 'Mi cultivo' }}
+        </h1>
+        <p class="mt-1 text-sm" style="color: var(--color-text-secondary)">
+          {{ isAgronomist() ? 'Monitoreo de todas las plantaciones a tu cargo.' : 'Resumen del estado de tus plantaciones' }}
+        </p>
+      </div>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+        @if (isAgronomist()) {
+        <button type="button" (click)="navigateToReports()" class="rounded-xl px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition hover:opacity-90" style="background: var(--color-brand-primary); color: var(--color-text-inverse)">
+          + Nuevo reporte
+        </button>
+        }
+        @if (plantations().length) {
+        <select (change)="selectPlantation(+($any($event.target).value))" class="w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition focus:ring-2 focus:border-transparent lg:w-auto" style="border-color: var(--color-border-subtle); background: var(--color-bg-surface); color: var(--color-text-primary); --tw-ring-color: var(--color-brand-primary)">
+          <option [value]="0">Todas las plantaciones</option>
+          @for (p of plantations(); track p.id) {
+          <option [value]="p.id">{{ p.name }}</option>
+          }
+        </select>
+        }
+      </div>
+    </div>
+
+    @if (!isAgronomist() && topRecommendation(); as topRec) {
+    <a [routerLink]="['/recomendaciones', topRec.id]" class="block rounded-2xl border px-5 py-4 transition hover:-translate-y-0.5" style="background: var(--color-bg-surface); border-color: var(--color-brand-primary); box-shadow: var(--shadow-card)">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0" style="background: var(--color-brand-primary); color: var(--color-text-inverse)">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-semibold uppercase tracking-wider" style="color: var(--color-brand-primary)">Tu agronomo recomienda</p>
+          <p class="mt-0.5 text-sm font-bold truncate" style="color: var(--color-text-primary)">{{ topRec.recommendedAction }}</p>
+        </div>
+        <span class="text-sm font-semibold flex-shrink-0" style="color: var(--color-brand-primary)">Ver detalle &rarr;</span>
+      </div>
+    </a>
+    }
+
+    @if (loading()) {
+    <div class="flex min-h-60 flex-col items-center justify-center gap-3 rounded-[1.75rem] border px-6 py-10" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle)">
+      <div class="h-8 w-8 animate-spin rounded-full border-2" style="border-color: var(--color-border-subtle); border-top-color: var(--color-brand-primary)"></div>
+      <p class="text-sm" style="color: var(--color-text-muted)">Cargando dashboard...</p>
+    </div>
+    } @else if (error()) {
+    <div class="rounded-2xl border px-5 py-4 text-sm" style="background: var(--color-danger-10); color: var(--color-danger); border-color: var(--color-danger)">
+      {{ error() }}
+    </div>
+    } @else {
+
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div class="rounded-2xl border px-5 py-4 sm:col-span-2" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <p class="text-xs font-medium uppercase tracking-wider" style="color: var(--color-text-muted)">{{ isAgronomist() ? 'Alertas activas' : 'Alertas' }}</p>
+        <div class="mt-3 grid grid-cols-2 gap-3">
+          <div class="rounded-xl px-4 py-3" style="background: var(--color-danger-10)">
+            <p class="text-2xl font-bold" style="color: var(--color-danger)">{{ alertCount().critical }}</p>
+            <p class="text-xs font-medium" style="color: var(--color-danger)">{{ isAgronomist() ? 'Criticas' : 'Urgentes' }}</p>
+          </div>
+          <div class="rounded-xl px-4 py-3" style="background: var(--color-warning-10)">
+            <p class="text-2xl font-bold" style="color: var(--color-warning)">{{ alertCount().warning }}</p>
+            <p class="text-xs font-medium" style="color: var(--color-warning)">{{ isAgronomist() ? 'Advertencias' : 'Atencion' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border px-5 py-4" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+        <p class="text-xs font-medium uppercase tracking-wider" style="color: var(--color-text-muted)">{{ isAgronomist() ? 'Dispositivos' : 'Tus dispositivos' }}</p>
+        <div class="mt-3 flex flex-col gap-2">
+          <div class="rounded-xl px-4 py-3" style="background: rgba(76,205,130,0.1)">
+            <p class="text-xl font-bold" style="color: var(--color-success)">{{ connectedCount() }}</p>
+            <p class="text-xs font-medium" style="color: var(--color-success)">Conectados</p>
+          </div>
+          @if (offlineCount()) {
+          <div class="rounded-xl px-4 py-3" style="background: var(--color-warning-10)">
+            <p class="text-xl font-bold" style="color: var(--color-warning)">{{ offlineCount() }}</p>
+            <p class="text-xs font-medium" style="color: var(--color-warning)">Modo offline</p>
+          </div>
+          }
+          @if (disconnectedCount()) {
+          <div class="rounded-xl px-4 py-3" style="background: var(--color-danger-10)">
+            <p class="text-xl font-bold" style="color: var(--color-danger)">{{ disconnectedCount() }}</p>
+            <p class="text-xs font-medium" style="color: var(--color-danger)">Desconectados</p>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (isAgronomist() && sparklineItems().length) {
+    <div class="rounded-2xl border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+      <h2 class="font-semibold" style="font-size: 1.1rem; color: var(--color-text-primary)">Tendencias de parametros</h2>
+      <p class="text-xs mt-0.5" style="color: var(--color-text-muted)">Evolucion de variables clave en el tiempo</p>
+      <div class="mt-4 grid gap-4 sm:grid-cols-3">
+        @for (item of sparklineItems(); track item.label) {
+        <div class="rounded-xl px-4 py-3" style="background: var(--color-bg-soft-2)">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium uppercase tracking-wider" style="color: var(--color-text-muted)">{{ item.label }}</span>
+            <span class="text-sm font-bold" [style.color]="item.color">{{ item.currentValue | number:'1.1-1' }}{{ item.unit }}</span>
+          </div>
+          <div class="mt-2 relative">
+            <svg viewBox="0 0 200 48" class="w-full h-12" preserveAspectRatio="none">
+              <polyline [attr.points]="item.points" fill="none" [attr.stroke]="item.color" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div class="mt-1 flex justify-between text-xs" style="color: var(--color-text-muted)">
+            <span>{{ item.vMin | number:'1.1-1' }}{{ item.unit }}</span>
+            <span>{{ item.vMax | number:'1.1-1' }}{{ item.unit }}</span>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    @if (!isAgronomist() && trendCards().length) {
+    <div class="rounded-2xl border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+      <h2 class="font-semibold" style="font-size: 1.1rem; color: var(--color-text-primary)">Como va tu cultivo</h2>
+      <p class="text-xs mt-0.5" style="color: var(--color-text-muted)">Mediciones mas recientes de tus sensores</p>
+      <div class="mt-4 grid gap-4 sm:grid-cols-3">
+        @for (card of trendCards(); track card.label) {
+        <div class="rounded-xl px-4 py-4 text-center" style="background: var(--color-bg-soft-2)">
+          <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full" [style.background]="card.color + '18'">
+            <svg class="h-6 w-6" [style.color]="card.color" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" [attr.d]="card.icon"/></svg>
+          </div>
+          <p class="mt-2 text-2xl font-bold" [style.color]="card.color">{{ card.currentValue | number:'1.1-1' }}<span class="text-sm font-normal">{{ card.unit }}</span></p>
+          <p class="text-xs font-medium" style="color: var(--color-text-muted)">{{ card.label }}</p>
+          <p class="mt-1 flex items-center justify-center gap-1 text-xs font-semibold"
+            [style.color]="card.direction === 'up' ? 'var(--color-warning)' : card.direction === 'down' ? 'var(--color-accent-cyan)' : 'var(--color-text-muted)'">
+            @if (card.direction === 'up') {
+            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5"/></svg>
+            <span>Subiendo {{ card.delta | number:'1.1-1' }}{{ card.unit }}</span>
+            } @else if (card.direction === 'down') {
+            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+            <span>Bajando {{ card.delta | number:'1.1-1' }}{{ card.unit }}</span>
+            } @else {
+            <span>Estable</span>
+            }
+          </p>
+          @if (card.alertLevel) {
+          <p class="mt-1 text-xs font-bold" [style.color]="card.alertLevel === 'critical' ? 'var(--color-danger)' : 'var(--color-warning)'">
+            {{ card.alertLevel === 'critical' ? 'Urgente' : 'Atencion' }}
+          </p>
+          }
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    <div class="grid gap-5 xl:grid-cols-2">
+      <div class="flex flex-col gap-5">
+        <div class="rounded-2xl border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+          <div class="flex items-center justify-between">
+            <h2 class="font-semibold" style="font-size: 1.1rem; color: var(--color-text-primary)">
+              {{ isAgronomist() ? 'Salud del cultivo' : 'Estado de tus zonas' }}
+            </h2>
+            @if (selectedPlantation()) {
+            <span class="text-xs" style="color: var(--color-text-muted)">{{ selectedPlantation()?.name }}</span>
+            }
+          </div>
+
+          @if (zones().length) {
+          <div class="mt-3 flex flex-col gap-2">
+            @if (isAgronomist()) {
+              @for (zone of zones(); track zone.id) {
+              <div class="flex items-center gap-3 rounded-xl border px-3.5 py-3" style="border-color: var(--color-border-subtle)">
+                <span class="inline-block h-2.5 w-2.5 rounded-full flex-shrink-0" [style.background]="healthColors[zone.cropHealthStatus]"></span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold truncate" style="color: var(--color-text-primary)">{{ zone.name }}</p>
+                  <p class="text-xs" style="color: var(--color-text-secondary)">{{ zone.hectares | number:'1.0-0' }} hect.</p>
+                </div>
+                <span class="text-xs rounded-full px-2.5 py-0.5 font-medium flex-shrink-0" [style.background]="healthColors[zone.cropHealthStatus] + '18'" [style.color]="healthColors[zone.cropHealthStatus]">{{ healthLabels[zone.cropHealthStatus] }}</span>
+              </div>
+              }
+            } @else {
+              @for (zone of zoneHealthItems(); track zone.id) {
+              <div class="flex items-center gap-3 rounded-xl border px-3.5 py-3" style="border-color: var(--color-border-subtle)">
+                <span class="inline-block h-2.5 w-2.5 rounded-full flex-shrink-0" [style.background]="zone.statusColor"></span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold truncate" style="color: var(--color-text-primary)">{{ zone.name }}</p>
+                  <p class="text-xs" style="color: var(--color-text-secondary)">
+                    {{ zone.hectares | number:'1.0-0' }} hect.
+                    @if (zone.criticalParam) {
+                    &middot; <span [style.color]="zone.criticalParamColor">{{ zone.criticalParam }}</span>
+                    }
+                  </p>
+                </div>
+                <span class="text-xs rounded-full px-2.5 py-0.5 font-medium flex-shrink-0" [style.background]="zone.statusColor + '18'" [style.color]="zone.statusColor">{{ zone.statusLabel }}</span>
+              </div>
+              }
+            }
+          </div>
+          } @else {
+          <p class="mt-3 text-sm" style="color: var(--color-text-secondary)">Selecciona una plantacion para ver sus zonas.</p>
+          }
+        </div>
+
+        @if (latestReadings().length) {
+        <div class="rounded-2xl border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+          <h2 class="font-semibold" style="font-size: 1.1rem; color: var(--color-text-primary)">{{ isAgronomist() ? 'Ultimas lecturas' : 'Lecturas recientes' }}</h2>
+          <div class="mt-3 overflow-x-auto -mx-1">
+            <table class="w-full text-sm">
+              <thead>
+                <tr style="color: var(--color-text-muted)">
+                  <th class="pb-2 pr-3 text-left text-xs font-medium">Variable</th>
+                  <th class="pb-2 pr-3 text-left text-xs font-medium">Valor</th>
+                  <th class="pb-2 pr-3 text-left text-xs font-medium">Dispositivo</th>
+                  <th class="pb-2 text-left text-xs font-medium">Hora</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of latestReadings(); track r.id) {
+                <tr style="border-top: 1px solid var(--color-border-subtle)">
+                  <td class="py-2 pr-3 font-medium" style="color: var(--color-text-primary)">{{ r.label }}</td>
+                  <td class="py-2 pr-3" style="color: var(--color-text-primary)">{{ r.value }} {{ r.unit }}</td>
+                  <td class="py-2 pr-3" style="color: var(--color-text-muted)">{{ r.deviceSerial || r.deviceId }}</td>
+                  <td class="py-2 whitespace-nowrap" style="color: var(--color-text-muted)">{{ r.recordedAt | date:'shortTime' }}</td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        }
+      </div>
+
+      <div class="flex flex-col gap-5">
+        @if (activeAlerts().length) {
+        <div class="rounded-2xl border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+          <div class="flex items-center justify-between">
+            <h2 class="font-semibold" style="font-size: 1.1rem; color: var(--color-text-primary)">Alertas recientes</h2>
+            <a routerLink="/alertas" class="text-xs font-semibold" style="color: var(--color-brand-primary)">Ver todas</a>
+          </div>
+          <div class="mt-3 flex flex-col gap-2">
+            @for (alert of activeAlerts(); track alert.id) {
+            <a [routerLink]="['/alertas', alert.id]" class="flex items-center gap-3 rounded-xl border px-3.5 py-3 transition" style="border-color: var(--color-border-subtle)">
+              <span class="inline-block h-2.5 w-2.5 rounded-full flex-shrink-0" [style.background]="alert.alertLevel === 'critical' ? 'var(--color-danger)' : alert.alertLevel === 'warning' ? 'var(--color-warning)' : 'var(--color-accent-cyan)'"></span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold truncate" style="color: var(--color-text-primary)">{{ alert.title }}</p>
+                <p class="text-xs truncate" style="color: var(--color-text-muted)">{{ alert.zoneName }} &middot; {{ alert.createdAt | date:'short' }}</p>
+              </div>
+            </a>
+            }
+          </div>
+        </div>
+        }
+
+        @if (recommendations().length) {
+        <div class="rounded-2xl border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+          <div class="flex items-center justify-between">
+            <h2 class="font-semibold" style="font-size: 1.1rem; color: var(--color-text-primary)">Recomendaciones</h2>
+            <a routerLink="/recomendaciones" class="text-xs font-semibold" style="color: var(--color-brand-primary)">Ver todas</a>
+          </div>
+          <div class="mt-3 flex flex-col gap-2">
+            @for (rec of recommendations(); track rec.id) {
+            <a [routerLink]="['/recomendaciones', rec.id]" class="flex items-center gap-3 rounded-xl border px-3.5 py-3 transition" style="border-color: var(--color-border-subtle)">
+              <span class="inline-block h-2.5 w-2.5 rounded-full flex-shrink-0" [style.background]="rec.priority === 'critical' ? 'var(--color-danger)' : rec.priority === 'high' ? 'var(--color-warning)' : 'var(--color-success)'"></span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold truncate" style="color: var(--color-text-primary)">{{ rec.title }}</p>
+                <p class="text-xs truncate" style="color: var(--color-text-muted)">{{ rec.plantationName }} &middot; {{ rec.zoneName }}</p>
+              </div>
+            </a>
+            }
+          </div>
+        </div>
+        }
+
+        @if (isAgronomist() && inspections().length) {
+        <div class="rounded-2xl border px-5 py-5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+          <div class="flex items-center justify-between">
+            <h2 class="font-semibold" style="font-size: 1.1rem; color: var(--color-text-primary)">Historial de intervenciones</h2>
+            <a routerLink="/inspecciones" class="text-xs font-semibold" style="color: var(--color-brand-primary)">Ver todas</a>
+          </div>
+          <div class="mt-3 flex flex-col gap-2">
+            @for (insp of inspections(); track insp.id) {
+            <a [routerLink]="['/inspecciones', insp.id]" class="rounded-xl border px-3.5 py-3 transition" style="border-color: var(--color-border-subtle)">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-medium rounded-full px-2.5 py-0.5 flex-shrink-0" style="background: var(--color-bg-soft-2); color: var(--color-text-muted)">{{ insp.inspectionDate | date:'dd/MM/yy' }}</span>
+                <span class="text-sm font-semibold truncate" style="color: var(--color-text-primary)">{{ insp.plantationName }}</span>
+              </div>
+              <p class="text-xs mt-1.5 line-clamp-2" style="color: var(--color-text-secondary)">{{ insp.findings || insp.observations }}</p>
+            </a>
+            }
+          </div>
+        </div>
+        }
+
+        <a routerLink="/plantaciones" class="rounded-2xl border px-5 py-4 transition hover:-translate-y-0.5" style="background: var(--color-bg-surface); border-color: var(--color-border-subtle); box-shadow: var(--shadow-card)">
+          <p class="text-xs font-medium uppercase tracking-wider" style="color: var(--color-text-muted)">
+            {{ isAgronomist() ? 'Plantaciones' : 'Tus plantaciones' }}
+          </p>
+          <div class="mt-2 flex flex-wrap gap-3">
+            @for (p of plantations(); track p.id) {
+            <div class="rounded-xl px-3 py-2" style="background: var(--color-bg-soft-2)">
+              <div class="flex items-center gap-1.5">
+                @if (p.overallHealth) {
+                <span class="inline-block h-2 w-2 rounded-full flex-shrink-0" [style.background]="p.overallHealth === 'critical' ? 'var(--color-danger)' : p.overallHealth === 'at_risk' ? 'var(--color-warning)' : 'var(--color-success)'"></span>
+                }
+                <p class="text-sm font-semibold truncate" style="color: var(--color-text-primary)">{{ p.name }}</p>
+              </div>
+              <p class="text-xs mt-1" style="color: var(--color-text-muted)">{{ p.totalHectares | number:'1.0-0' }} hect. &middot; {{ p.phenologicalPhase === 'produccion' ? 'Produccion' : 'Establecimiento' }}</p>
+            </div>
+            }
+          </div>
+        </a>
+      </div>
+    </div>
+
+    }
+  </div>
+</section>

@@ -1,0 +1,19 @@
+<div class="min-h-dvh lg:h-dvh" style="background: var(--color-bg-page)">
+  <div class="flex min-h-dvh flex-col lg:h-dvh lg:flex-row">
+    <div class="lg:h-dvh lg:w-[290px] lg:flex-shrink-0">
+      <app-sidebar />
+    </div>
+
+    <div class="flex min-w-0 flex-1 flex-col">
+      <header style="background: var(--color-bg-surface); border-bottom: 1px solid var(--color-border-subtle)">
+        <app-navbar />
+      </header>
+
+      <main class="min-w-0 flex-1 overflow-auto">
+        <div class="min-h-dvh" style="background: var(--color-bg-page)">
+          <router-outlet />
+        </div>
+      </main>
+    </div>
+  </div>
+</div>

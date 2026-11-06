@@ -147,6 +147,11 @@ export class AuthService {
       localStorage.getItem('accessToken');
     if (!token || token.startsWith('demo-token') || token === 'pending-real-token') return null;
     if (token.split('.').length !== 3) return null;
+    const payload = decodeJwtPayload(token);
+    if (payload?.exp !== undefined && payload.exp * 1000 <= Date.now()) {
+      this.logout();
+      return null;
+    }
     return token;
   }
 
@@ -193,8 +198,8 @@ export class AuthService {
     const token = body.token;
     const id = body.userId || userIdFromToken(token) || 0;
     const username = body.username || '';
-    const role = this.resolveRole(token, username);
-    const profile = this.knownSeedProfile(username, id);
+    const role = this.resolveRole(token);
+    const profile = this.profileFromUsername(username);
 
     const user: User = {
       id,
@@ -212,43 +217,15 @@ export class AuthService {
     return { accessToken: token, user };
   }
 
-  private knownSeedProfile(
-    username: string,
-    userId: number,
-  ): { email: string; fullName: string } {
-    const key = username.trim().toLowerCase();
-    const seeds: Record<string, { email: string; fullName: string }> = {
-      agronomist01: {
-        email: 'agro1@smartpalm.com',
-        fullName: 'Agronomist One',
-      },
-      admin: {
-        email: 'admin@smartpalm.com',
-        fullName: 'System Administrator',
-      },
-      palmgrower01: {
-        email: 'grower1@smartpalm.com',
-        fullName: 'Palm Grower One',
-      },
-    };
-    if (seeds[key]) return seeds[key];
-    if (userId === environment.demo.agronomistId) {
-      return {
-        email: 'agro1@smartpalm.com',
-        fullName: 'Agronomist One',
-      };
-    }
+  private profileFromUsername(username: string): { email: string; fullName: string } {
     return {
       email: username.includes('@') ? username : `${username}@smartpalm.local`,
       fullName: username,
     };
   }
 
-  /**
-   * JWT may omit role; backend Authorize middleware loads role from DB.
-   * Front uses claims + username heuristics for UI routing only.
-   */
-  private resolveRole(token: string, username: string): UserRole {
+  /** The backend includes the role claim; never infer permissions from a username. */
+  private resolveRole(token: string): UserRole {
     const payload = decodeJwtPayload(token);
     const raw =
       (payload?.role as string | undefined) ||
@@ -260,12 +237,6 @@ export class AuthService {
     if (normalized.includes('admin')) return 'administrator';
     if (normalized.includes('grower') || normalized === 'palmgrower') return 'palm_grower';
     if (normalized.includes('agronom')) return 'agronomist';
-
-    const u = username.trim().toLowerCase();
-    // Exact/prefix match only — do not use includes('admin') (false positives).
-    if (u === 'admin' || u.startsWith('admin')) return 'administrator';
-    if (u.includes('grower') || u === 'palmgrower01') return 'palm_grower';
-    if (u.includes('agronom') || u === 'agronomist01') return 'agronomist';
-    return 'agronomist';
+    throw new Error('The sign-in token does not contain a supported role claim.');
   }
 }

@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "concurrently -n angular,mock -c cyan,green \"ng serve\" \"node ../../smartpalm-mock-api/server.js\"",
+    "start": "ng serve",
+    "start:real": "ng serve",
+    "start:mock": "concurrently -n angular,mock -c cyan,green \"ng serve\" \"node ../../smartpalm-mock-api/server.js\"",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"

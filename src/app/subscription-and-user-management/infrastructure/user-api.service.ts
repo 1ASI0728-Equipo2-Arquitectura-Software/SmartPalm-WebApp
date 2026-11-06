@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { User } from '../../shared/domain/user.model';
 import { AuthService } from '../../shared/infrastructure/auth.service';
@@ -29,18 +29,7 @@ export class UserService {
     if (environment.demoAuth || environment.dataSource === 'real') {
       const updated = this.authService.patchCurrentUser(data);
       if (updated) return of(updated);
-      return of({
-        id: environment.demo.agronomistId,
-        email: 'agro1@smartpalm.com',
-        fullName: data.fullName ?? 'Agronomist One',
-        role: 'agronomist',
-        phone: data.phone ?? '',
-        region: data.region ?? '',
-        city: data.city ?? '',
-        avatarUrl: data.avatarUrl ?? null,
-        subscriptionId: null,
-        createdAt: new Date().toISOString(),
-      });
+      return throwError(() => new Error('No authenticated user is available for profile update.'));
     }
     return this.http.put<User>(`${this.api}/me`, data);
   }

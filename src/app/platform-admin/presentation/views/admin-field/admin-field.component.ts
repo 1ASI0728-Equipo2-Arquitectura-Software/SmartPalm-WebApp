@@ -7,7 +7,6 @@ import {
   AdminPlantationDto,
   AdminUserDto,
 } from '../../../infrastructure/admin-api.service';
-import { environment } from '../../../../../environments/environment';
 import { getApiErrorMessage } from '../../../../shared/infrastructure/api-error-message';
 import { TranslationService } from '../../../../i18n/translation.service';
 
@@ -38,8 +37,8 @@ export class AdminFieldComponent implements OnInit {
     address: ['Pucallpa', Validators.required],
     ownerUserId: [0],
     sectorName: ['Sector Norte', Validators.required],
-    iotMac: [environment.demo.deviceMac || 'AA:BB:CC:DD:EE:01', Validators.required],
-    gatewayMac: [environment.demo.gatewayMac || 'AA:BB:CC:00:00:01', Validators.required],
+    iotMac: ['', Validators.required],
+    gatewayMac: ['', Validators.required],
     monitoringZoneId: [1, [Validators.required, Validators.min(1)]],
     existingPlantationId: [0],
   });
@@ -114,6 +113,11 @@ export class AdminFieldComponent implements OnInit {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       void navigator.clipboard.writeText(value);
     }
+  }
+
+  acknowledgeCredentials(): void {
+    this.gatewayCloudKey.set('');
+    this.iotBootstrapKey.set('');
   }
 
   reloadPlantations(): void {
@@ -200,13 +204,20 @@ export class AdminFieldComponent implements OnInit {
           if (!ownerUserId) {
             throw new Error(this.t.translate('admin.field.ownerRequired'));
           }
-          return this.api
-            .assignSector(plantationId, {
-              // The sector exists independently; the IoT is linked in DeviceService.
-              iotDeviceMacAddress: null,
-              sectorName: v.sectorName.trim(),
-            })
-            .pipe(
+          return this.api.getSubscriptionForUser(ownerUserId).pipe(
+            switchMap((subscription) => {
+              if (subscription.status.toLowerCase() !== 'active') {
+                throw new Error(
+                  this.t.translate('admin.field.subscriptionInactive'),
+                );
+              }
+              return this.api
+                .assignSector(plantationId, {
+                  // The sector exists independently; the IoT is linked in DeviceService.
+                  iotDeviceMacAddress: null,
+                  sectorName: v.sectorName.trim(),
+                })
+                .pipe(
               catchError((e) => {
                 this.pushLog(
                   `${this.t.translate('admin.field.log.sectorSkip')} ${getApiErrorMessage(e, '')}`.trim(),
@@ -255,8 +266,10 @@ export class AdminFieldComponent implements OnInit {
                       return context.plantationId;
                     }),
                   );
-              }),
-            );
+                  }),
+                );
+            }),
+          );
         }),
         finalize(() => {
           this.saving.set(false);

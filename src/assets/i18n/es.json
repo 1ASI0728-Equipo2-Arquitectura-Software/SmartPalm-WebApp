@@ -23,6 +23,7 @@
     "role": {
       "agronomist": "Agrónomo",
       "grower": "Agricultor",
+      "existingAccountHelp": "La administración usa la cuenta seleccionada directamente; no requiere su contraseña.",
       "admin": "Administrador"
     },
     "monitoring": "Monitoreo",
@@ -139,6 +140,7 @@
       "cloudKey": "CloudKey del gateway",
       "bootstrapKey": "BootstrapKey del IoT",
       "copyKey": "Copiar",
+      "credentialsDone": "Ya copié las credenciales; ocultarlas",
       "step5": "Vincular agrónomo",
       "linkAgronomist": "Afiliar un agrónomo a esta plantación",
       "logTitle": "Progreso",
@@ -146,12 +148,14 @@
       "done": "Agricultor {{name}} listo · plantación {{id}} (app móvil + desk agrónomo).",
       "error": "No se pudo completar el aprovisionamiento del agricultor.",
       "errorForm": "Completa usuario, correo y contraseña del agricultor nuevo.",
-      "errorPassword": "Elige un agricultor e indica su contraseña para crear la plantación a su nombre.",
+      "errorPassword": "Elige un agricultor para continuar.",
       "errorGrower": "No se pudo resolver el agricultor.",
       "log": {
         "createdGrower": "Cuenta de agricultor creada: {{name}}",
         "useGrower": "Usando agricultor {{name}}",
         "accessOk": "Plan activado (suscripción + pago)",
+        "subscriptionCreated": "Suscripción creada",
+        "paymentOk": "Pago procesado",
         "accessRetry": "Reintento de acceso:",
         "accessSkip": "Acceso (omitido o ya activo):",
         "plantationOk": "Plantación del agricultor creada {{id}}",
@@ -218,6 +222,7 @@
       "address": "Dirección",
       "owner": "Agricultor propietario",
       "ownerRequired": "Selecciona el agricultor propietario de la plantación.",
+      "subscriptionInactive": "La suscripción del propietario no está activa.",
       "sectorName": "Nombre del sector",
       "iotMac": "MAC del IoT",
       "gatewayMac": "MAC del edge gateway",
@@ -227,6 +232,7 @@
       "cloudKey": "CloudKey del gateway",
       "bootstrapKey": "BootstrapKey del IoT",
       "copyKey": "Copiar",
+         "credentialsDone": "Ya copié las credenciales; ocultarlas",
       "run": "Activar infraestructura",
       "running": "Ejecutando...",
       "logTitle": "Progreso",
@@ -551,6 +557,7 @@
       "load": "No se pudieron cargar las recomendaciones.",
       "loadDetail": "No se pudo cargar la recomendación.",
       "noId": "Esta recomendación no tiene id conocido en el backend.",
+      "noSector": "No hay un sector registrado para esta sesión.",
       "create": "No se pudo crear la recomendación.",
       "approve": "No se pudo aprobar.",
       "publish": "No se pudo publicar."
@@ -1161,6 +1168,11 @@
     "emptyHealth": "Sin datos de salud para el sector (sin lecturas o sin IoT asignado).",
     "context": "Contexto de trabajo",
     "contextLine": "GW {{gateway}} · IoT {{device}} · Sector #{{sector}}",
+    "ownershipLine": "Usuario #{{owner}} · Plantación #{{plantation}} · Sector #{{sector}}",
+    "provisioning": {
+      "provisioned": "Provisión completada",
+      "pending": "Provisión pendiente"
+    },
     "sectorHealth": "Salud del sector",
     "refresh": "Actualizar",
     "backDashboard": "Dashboard",

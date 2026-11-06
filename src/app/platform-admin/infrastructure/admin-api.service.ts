@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, map, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { PlanType, PlatformUserRole } from '../../shared/domain/platform-contracts';
 
 export interface AdminUserDto {
   id: number;
@@ -17,7 +18,7 @@ export interface CreateAdminUserBody {
   password: string;
   email: string;
   fullName: string;
-  role: 'Agronomist' | 'PalmGrower';
+  role: PlatformUserRole;
 }
 
 export interface AdminSubscriptionDto {
@@ -31,6 +32,11 @@ export interface AdminSubscriptionDto {
   createdAt?: string;
   userId?: number;
   id?: number | string;
+}
+
+export interface AdminSubscriptionStatusDto extends AdminSubscriptionDto {
+  userId: number;
+  status: string;
 }
 
 export interface AdminPlantationDto {
@@ -123,11 +129,17 @@ export class AdminApiService {
   }
 
   // ── Subscriptions ──────────────────────────────────────
-  createSubscription(userId: number, planType: string): Observable<AdminSubscriptionDto> {
+  createSubscription(userId: number, planType: PlanType | string): Observable<AdminSubscriptionDto> {
     return this.http.post<AdminSubscriptionDto>(`${this.base}/admin/subscriptions`, {
       userId,
       planType,
     });
+  }
+
+  getSubscriptionForUser(userId: number): Observable<AdminSubscriptionStatusDto> {
+    return this.http.get<AdminSubscriptionStatusDto>(
+      `${this.base}/admin/subscriptions/users/${userId}`,
+    );
   }
 
   processPayment(userId: number, amount: number): Observable<unknown> {
@@ -136,7 +148,7 @@ export class AdminApiService {
     });
   }
 
-  /** Create subscription + payment (idempotent-ish: payment retried if sub exists). */
+  /** Create subscription + payment when the target account has no subscription yet. */
   activateAccess(userId: number, planType: string, amount: number): Observable<unknown> {
     return this.createSubscription(userId, planType).pipe(
       switchMap(() => this.processPayment(userId, amount)),
@@ -158,41 +170,6 @@ export class AdminApiService {
 
   getPlantation(id: number): Observable<AdminPlantationDetailDto> {
     return this.http.get<AdminPlantationDetailDto>(`${this.base}/admin/plantations/${id}`);
-  }
-
-  /**
-   * Create plantation owned by a PalmGrower.
-   * API POST /plantations always uses the JWT user as owner — so we sign-in as the grower
-   * for this single request only (Bearer header), without replacing the admin session.
-   */
-  createPlantationForGrower(
-    growerUsername: string,
-    growerPassword: string,
-    body: { name: string; hectares: number; address: string; coordinates?: string },
-  ): Observable<AdminPlantationDto> {
-    return this.http
-      .post<{ userId: number; username: string; token: string }>(
-        `${this.base}/authentication/sign-in`,
-        { username: growerUsername.trim(), password: growerPassword },
-      )
-      .pipe(
-        switchMap((auth) => {
-          const headers = new HttpHeaders({
-            Authorization: `Bearer ${auth.token}`,
-            'Content-Type': 'application/json',
-          });
-          return this.http.post<AdminPlantationDto>(
-            `${this.base}/plantations`,
-            {
-              name: body.name,
-              hectares: body.hectares,
-              address: body.address,
-              coordinates: body.coordinates ?? '',
-            },
-            { headers },
-          );
-        }),
-      );
   }
 
   /** Create an administrator-designated plantation owned by the selected PalmGrower. */
@@ -228,7 +205,7 @@ export class AdminApiService {
     ownerUserId: number,
     monitoringZoneId = 1,
   ): Observable<GatewayRegistrationResponse> {
-    return this.http.post<GatewayRegistrationResponse>(`${this.base}/edge-gateways`, {
+    return this.http.post<GatewayRegistrationResponse>(`${this.base}/admin/edge-gateways`, {
       edgeMac,
       ownerUserId,
       monitoringZoneId,
@@ -245,7 +222,7 @@ export class AdminApiService {
     },
   ): Observable<IotRegistrationResponse> {
     return this.http.post<IotRegistrationResponse>(
-      `${this.base}/edge-gateways/${encodeURIComponent(gatewayMac)}/iot-devices`,
+      `${this.base}/admin/edge-gateways/${encodeURIComponent(gatewayMac)}/iot-devices`,
       body,
     );
   }

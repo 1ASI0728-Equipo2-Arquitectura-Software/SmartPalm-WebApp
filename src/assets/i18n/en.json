@@ -22,6 +22,7 @@
     "role": {
       "agronomist": "Agronomist",
       "grower": "Palm grower",
+      "existingAccountHelp": "The administrator uses the selected account directly; its password is not required.",
       "admin": "Administrator"
     },
     "devices": "Devices",
@@ -139,6 +140,7 @@
       "cloudKey": "Gateway CloudKey",
       "bootstrapKey": "IoT BootstrapKey",
       "copyKey": "Copy",
+      "credentialsDone": "I copied the credentials; hide them",
       "step5": "Link agronomist",
       "linkAgronomist": "Affiliate an agronomist to this plantation",
       "logTitle": "Progress",
@@ -146,12 +148,14 @@
       "done": "Palm grower {{name}} ready · plantation {{id}} (mobile app + agronomist desk).",
       "error": "Could not complete palm grower provisioning.",
       "errorForm": "Fill username, email and password for the new palm grower.",
-      "errorPassword": "Pick a palm grower and enter their password to create the plantation under their name.",
+      "errorPassword": "Pick a palm grower to continue.",
       "errorGrower": "Could not resolve the palm grower.",
       "log": {
         "createdGrower": "Palm grower account created: {{name}}",
         "useGrower": "Using palm grower {{name}}",
         "accessOk": "Plan activated (subscription + payment)",
+        "subscriptionCreated": "Subscription created",
+        "paymentOk": "Payment processed",
         "accessRetry": "Access retry:",
         "accessSkip": "Access (skipped or already active):",
         "plantationOk": "Palm grower plantation created {{id}}",
@@ -218,6 +222,7 @@
       "address": "Address",
       "owner": "Palm grower owner",
       "ownerRequired": "Select the palm grower who owns the plantation.",
+      "subscriptionInactive": "The owner's subscription is not active.",
       "sectorName": "Sector name",
       "iotMac": "IoT MAC",
       "gatewayMac": "Edge gateway MAC",
@@ -227,6 +232,7 @@
       "cloudKey": "Gateway CloudKey",
       "bootstrapKey": "IoT BootstrapKey",
       "copyKey": "Copy",
+         "credentialsDone": "I copied the credentials; hide them",
       "run": "Activate infrastructure",
       "running": "Running...",
       "logTitle": "Progress",
@@ -551,6 +557,7 @@
       "load": "Recommendations could not be loaded.",
       "loadDetail": "Recommendation could not be loaded.",
       "noId": "This recommendation has no known id on the backend.",
+      "noSector": "No registered sector is available for this session.",
       "create": "Could not create the recommendation.",
       "approve": "Could not approve.",
       "publish": "Could not publish."
@@ -1161,6 +1168,11 @@
     "emptyHealth": "No sector health data (no readings or no IoT assigned).",
     "context": "Work context",
     "contextLine": "GW {{gateway}} · IoT {{device}} · Sector #{{sector}}",
+    "ownershipLine": "User #{{owner}} · Plantation #{{plantation}} · Sector #{{sector}}",
+    "provisioning": {
+      "provisioned": "Provisioned",
+      "pending": "Provisioning pending"
+    },
     "sectorHealth": "Sector health",
     "refresh": "Refresh",
     "backDashboard": "Dashboard",

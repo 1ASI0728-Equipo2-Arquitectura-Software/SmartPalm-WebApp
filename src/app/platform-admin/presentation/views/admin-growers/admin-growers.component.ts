@@ -1,7 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { of } from 'rxjs';
-import { catchError, finalize, map, switchMap } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
+import { of, throwError } from 'rxjs';
+import { catchError, finalize, map, switchMap, tap } from 'rxjs/operators';
 import {
   AdminApiService,
   AdminPlantationDto,
@@ -49,7 +50,7 @@ export class AdminGrowersComponent implements OnInit {
     fullName: [''],
     username: [''],
     email: [''],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    password: [''],
     // access
     planType: ['Seed'],
     amount: [149],
@@ -59,8 +60,8 @@ export class AdminGrowersComponent implements OnInit {
     address: ['Pucallpa'],
     // iot
     sectorName: ['Sector Norte'],
-    iotMac: [environment.demo.deviceMac || 'AA:BB:CC:DD:EE:02'],
-    gatewayMac: [environment.demo.gatewayMac || 'AA:BB:CC:00:00:02'],
+    iotMac: [''],
+    gatewayMac: [''],
     monitoringZoneId: [1],
     // affiliation
     agronomistId: [''],
@@ -96,6 +97,11 @@ export class AdminGrowersComponent implements OnInit {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       void navigator.clipboard.writeText(value);
     }
+  }
+
+  acknowledgeCredentials(): void {
+    this.gatewayCloudKey.set('');
+    this.iotBootstrapKey.set('');
   }
 
   reload(): void {
@@ -167,19 +173,23 @@ export class AdminGrowersComponent implements OnInit {
    * Full provisioning for mobile grower app:
    * 1) ensure grower user
    * 2) activate plan
-   * 3) create plantation owned by grower (temporary grower JWT, admin session intact)
+   * 3) create plantation owned by grower using the administrator contract
    * 4) sector + gateway + IoT as admin
    * 5) optional agronomist affiliation
    */
   runProvision(): void {
     const v = this.form.getRawValue();
     if (v.mode === 'create') {
-      if (!v.username.trim() || !v.email.trim() || !v.password) {
+      if (!v.username.trim() || !v.email.trim() || v.password.length < 6) {
         this.error.set(this.t.translate('admin.growers.errorForm'));
         return;
       }
-    } else if (!v.growerUserId || !v.password) {
-      this.error.set(this.t.translate('admin.growers.errorPassword'));
+    } else if (!v.growerUserId) {
+      this.error.set(this.t.translate('admin.growers.errorGrower'));
+      return;
+    }
+    if (!v.plantationName.trim() || !v.sectorName.trim() || !v.iotMac.trim() || !v.gatewayMac.trim()) {
+      this.error.set(this.t.translate('admin.growers.errorForm'));
       return;
     }
 
@@ -210,7 +220,6 @@ export class AdminGrowersComponent implements OnInit {
                 return of({
                   id: u.id,
                   username: u.username,
-                  password: v.password,
                 });
               }),
             )
@@ -218,7 +227,6 @@ export class AdminGrowersComponent implements OnInit {
             id: Number(v.growerUserId),
             username:
               this.growers().find((g) => g.id === Number(v.growerUserId))?.username || '',
-            password: v.password,
           }).pipe(
             switchMap((g) => {
               this.push(
@@ -236,30 +244,14 @@ export class AdminGrowersComponent implements OnInit {
           if (!grower.username) {
             throw new Error(this.t.translate('admin.growers.errorGrower'));
           }
-          // Activate plan (admin token)
-          return this.api.activateAccess(grower.id, v.planType, Number(v.amount)).pipe(
-            catchError((e) => {
-              // Sub may already exist — try payment only
-              this.push(
-                `${this.t.translate('admin.growers.log.accessRetry')} ${getApiErrorMessage(e, '')}`.trim(),
-              );
-              return this.api.processPayment(grower.id, Number(v.amount)).pipe(
-                catchError((e2) => {
-                  this.push(
-                    `${this.t.translate('admin.growers.log.accessSkip')} ${getApiErrorMessage(e2, '')}`.trim(),
-                  );
-                  return of(void 0);
-                }),
-              );
-            }),
+          return this.ensureActiveSubscription(grower.id, v.planType, Number(v.amount)).pipe(
             switchMap(() => {
               this.push(this.t.translate('admin.growers.log.accessOk'));
-              // Plantation owned by grower
-              return this.api
-                .createPlantationForGrower(grower.username, grower.password, {
+              return this.api.createPlantation({
                   name: v.plantationName.trim(),
                   hectares: Number(v.hectares),
                   address: v.address.trim(),
+                  palmGrowerId: grower.id,
                 })
                 .pipe(
                   switchMap((plantation) => {
@@ -373,5 +365,43 @@ export class AdminGrowersComponent implements OnInit {
         error: (e) =>
           this.error.set(getApiErrorMessage(e, this.t.translate('admin.growers.error'))),
       });
+  }
+
+  private ensureActiveSubscription(
+    userId: number,
+    planType: string,
+    amount: number,
+  ) {
+    return this.api.getSubscriptionForUser(userId).pipe(
+      catchError((error: unknown) => {
+        if (!(error instanceof HttpErrorResponse) || error.status !== 404) {
+          return throwError(() => error);
+        }
+        return this.api.createSubscription(userId, planType).pipe(
+          tap(() => this.push(this.t.translate('admin.growers.log.subscriptionCreated'))),
+          switchMap(() => this.api.processPayment(userId, amount)),
+          switchMap(() => this.api.getSubscriptionForUser(userId)),
+        );
+      }),
+      switchMap((subscription) => {
+        if (subscription.status.toLowerCase() === 'active') {
+          return of(subscription);
+        }
+        if (subscription.status.toLowerCase() !== 'pending') {
+          return throwError(
+            () => new Error(`Subscription is not payable: ${subscription.status}`),
+          );
+        }
+        return this.api.processPayment(userId, amount).pipe(
+          tap(() => this.push(this.t.translate('admin.growers.log.paymentOk'))),
+          switchMap(() => this.api.getSubscriptionForUser(userId)),
+        );
+      }),
+      switchMap((subscription) =>
+        subscription.status.toLowerCase() === 'active'
+          ? of(subscription)
+          : throwError(() => new Error(`Subscription is not active: ${subscription.status}`)),
+      ),
+    );
   }
 }

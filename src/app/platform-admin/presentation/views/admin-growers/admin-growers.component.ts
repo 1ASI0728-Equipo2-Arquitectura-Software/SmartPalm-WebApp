@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { of } from 'rxjs';
-import { catchError, finalize, switchMap } from 'rxjs/operators';
+import { catchError, finalize, map, switchMap } from 'rxjs/operators';
 import {
   AdminApiService,
   AdminPlantationDto,
@@ -37,6 +37,9 @@ export class AdminGrowersComponent implements OnInit {
   readonly error = signal('');
   readonly success = signal('');
   readonly log = signal<string[]>([]);
+  /** Raw one-time credentials are kept only in component memory for physical setup. */
+  readonly gatewayCloudKey = signal('');
+  readonly iotBootstrapKey = signal('');
 
   /** Mode: onboard new grower or operate on existing */
   form = this.fb.nonNullable.group({
@@ -87,6 +90,12 @@ export class AdminGrowersComponent implements OnInit {
 
   private push(line: string): void {
     this.log.update((rows) => [...rows, line]);
+  }
+
+  copyKey(value: string): void {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      void navigator.clipboard.writeText(value);
+    }
   }
 
   reload(): void {
@@ -178,6 +187,8 @@ export class AdminGrowersComponent implements OnInit {
     this.error.set('');
     this.success.set('');
     this.log.set([]);
+    this.gatewayCloudKey.set('');
+    this.iotBootstrapKey.set('');
 
     const ensureGrower$ =
       v.mode === 'create'
@@ -266,7 +277,9 @@ export class AdminGrowersComponent implements OnInit {
         switchMap(({ grower, plantationId }) => {
           return this.api
             .assignSector(plantationId, {
-              iotDeviceMacAddress: v.iotMac.trim(),
+              // The sector is created before the IoT registration. Device ownership
+              // is established by the DeviceService request below.
+              iotDeviceMacAddress: null,
               sectorName: v.sectorName.trim(),
             })
             .pipe(
@@ -274,44 +287,61 @@ export class AdminGrowersComponent implements OnInit {
                 this.push(
                   `${this.t.translate('admin.growers.log.sectorSkip')} ${getApiErrorMessage(e, '')}`.trim(),
                 );
-                return of(void 0);
+                throw e;
               }),
-              switchMap(() => {
+              switchMap((sector) => {
+                if (!sector.id) {
+                  throw new Error('The sector registration did not return a sector id.');
+                }
                 this.push(this.t.translate('admin.growers.log.sectorOk'));
                 return this.api
-                  .registerEdgeGateway(v.gatewayMac.trim(), Number(v.monitoringZoneId))
+                  .registerEdgeGateway(
+                    v.gatewayMac.trim(),
+                    grower.id,
+                    Number(v.monitoringZoneId),
+                  )
                   .pipe(
                     catchError((e) => {
                       this.push(
                         `${this.t.translate('admin.growers.log.gatewaySkip')} ${getApiErrorMessage(e, '')}`.trim(),
                       );
-                      return of(void 0);
+                      throw e;
+                    }),
+                    map((gateway) => {
+                      this.gatewayCloudKey.set(gateway.cloudKey);
+                      this.push(this.t.translate('admin.growers.log.gatewayOk'));
+                      return { grower, plantationId, sectorId: sector.id };
                     }),
                   );
               }),
-              switchMap(() => {
-                this.push(this.t.translate('admin.growers.log.gatewayOk'));
+              switchMap((context) => {
                 return this.api
                   .registerIotDevice(v.gatewayMac.trim(), {
                     iotMac: v.iotMac.trim(),
-                    plantationId,
+                    ownerUserId: context.grower.id,
+                    plantationId: context.plantationId,
+                    sectorId: context.sectorId,
                   })
                   .pipe(
                     catchError((e) => {
                       this.push(
                         `${this.t.translate('admin.growers.log.iotSkip')} ${getApiErrorMessage(e, '')}`.trim(),
                       );
-                      return of(void 0);
+                      throw e;
+                    }),
+                    map((iot) => {
+                      this.iotBootstrapKey.set(iot.bootstrapKey);
+                      this.push(this.t.translate('admin.growers.log.iotOk'));
+                      return context;
                     }),
                   );
               }),
-              switchMap(() => {
-                this.push(this.t.translate('admin.growers.log.iotOk'));
+              switchMap((context) => {
                 if (!v.linkAgronomist || !v.agronomistId) {
-                  return of({ grower, plantationId });
+                  return of(context);
                 }
                 const agroId = Number(v.agronomistId);
-                return this.api.createAffiliation(agroId, plantationId).pipe(
+                return this.api.createAffiliation(agroId, context.plantationId).pipe(
                   catchError((e) => {
                     this.push(
                       `${this.t.translate('admin.growers.log.affSkip')} ${getApiErrorMessage(e, '')}`.trim(),
@@ -320,7 +350,7 @@ export class AdminGrowersComponent implements OnInit {
                   }),
                   switchMap(() => {
                     this.push(this.t.translate('admin.growers.log.affOk'));
-                    return of({ grower, plantationId });
+                    return of(context);
                   }),
                 );
               }),

@@ -1,8 +1,12 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { of } from 'rxjs';
-import { catchError, finalize, switchMap } from 'rxjs/operators';
-import { AdminApiService, AdminPlantationDto } from '../../../infrastructure/admin-api.service';
+import { catchError, finalize, map, switchMap } from 'rxjs/operators';
+import {
+  AdminApiService,
+  AdminPlantationDto,
+  AdminUserDto,
+} from '../../../infrastructure/admin-api.service';
 import { environment } from '../../../../../environments/environment';
 import { getApiErrorMessage } from '../../../../shared/infrastructure/api-error-message';
 import { TranslationService } from '../../../../i18n/translation.service';
@@ -18,16 +22,21 @@ export class AdminFieldComponent implements OnInit {
   private readonly t = inject(TranslationService);
 
   readonly plantations = signal<AdminPlantationDto[]>([]);
+  readonly growers = signal<AdminUserDto[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly error = signal('');
   readonly success = signal('');
   readonly log = signal<string[]>([]);
+  /** Raw one-time credentials are kept only in component memory for physical setup. */
+  readonly gatewayCloudKey = signal('');
+  readonly iotBootstrapKey = signal('');
 
   form = this.fb.nonNullable.group({
     plantationName: ['', Validators.required],
     hectares: [12, [Validators.required, Validators.min(0.1)]],
     address: ['Pucallpa', Validators.required],
+    ownerUserId: [0],
     sectorName: ['Sector Norte', Validators.required],
     iotMac: [environment.demo.deviceMac || 'AA:BB:CC:DD:EE:01', Validators.required],
     gatewayMac: [environment.demo.gatewayMac || 'AA:BB:CC:00:00:01', Validators.required],
@@ -66,6 +75,9 @@ export class AdminFieldComponent implements OnInit {
   get addressLabel(): string {
     return this.t.translate('admin.field.address');
   }
+  get ownerLabel(): string {
+    return this.t.translate('admin.field.owner');
+  }
   get sectorNameLabel(): string {
     return this.t.translate('admin.field.sectorName');
   }
@@ -90,8 +102,18 @@ export class AdminFieldComponent implements OnInit {
     return this.t.translate('admin.field.hint');
   }
 
+  tr(key: string): string {
+    return this.t.translate(key);
+  }
+
   private pushLog(line: string): void {
     this.log.update((rows) => [...rows, line]);
+  }
+
+  copyKey(value: string): void {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      void navigator.clipboard.writeText(value);
+    }
   }
 
   reloadPlantations(): void {
@@ -108,6 +130,16 @@ export class AdminFieldComponent implements OnInit {
           this.form.patchValue({ existingPlantationId: rows[0].id });
         }
       });
+
+    this.api
+      .listGrowers()
+      .pipe(catchError(() => of([] as AdminUserDto[])))
+      .subscribe((rows) => {
+        this.growers.set(rows);
+        if (rows[0] && !this.form.controls.ownerUserId.value) {
+          this.form.patchValue({ ownerUserId: rows[0].id });
+        }
+      });
   }
 
   runSetup(): void {
@@ -116,14 +148,23 @@ export class AdminFieldComponent implements OnInit {
       return;
     }
     const v = this.form.getRawValue();
+    if (v.existingPlantationId <= 0 && !v.ownerUserId) {
+      this.error.set(this.t.translate('admin.field.ownerRequired'));
+      return;
+    }
     this.saving.set(true);
     this.error.set('');
     this.success.set('');
     this.log.set([]);
+    this.gatewayCloudKey.set('');
+    this.iotBootstrapKey.set('');
 
     const ensurePlantation$ =
       v.existingPlantationId > 0
-        ? of({ id: v.existingPlantationId } as AdminPlantationDto).pipe(
+        ? of(
+            this.plantations().find((p) => p.id === v.existingPlantationId) ||
+              ({ id: v.existingPlantationId } as AdminPlantationDto),
+          ).pipe(
             switchMap((p) => {
               this.pushLog(
                 this.t
@@ -138,6 +179,7 @@ export class AdminFieldComponent implements OnInit {
               name: v.plantationName.trim(),
               hectares: v.hectares,
               address: v.address.trim(),
+              palmGrowerId: Number(v.ownerUserId),
             })
             .pipe(
               switchMap((p) => {
@@ -154,9 +196,14 @@ export class AdminFieldComponent implements OnInit {
       .pipe(
         switchMap((plantation) => {
           const plantationId = plantation.id;
+          const ownerUserId = plantation.palmGrowerId || plantation.ownerId || Number(v.ownerUserId);
+          if (!ownerUserId) {
+            throw new Error(this.t.translate('admin.field.ownerRequired'));
+          }
           return this.api
             .assignSector(plantationId, {
-              iotDeviceMacAddress: v.iotMac.trim(),
+              // The sector exists independently; the IoT is linked in DeviceService.
+              iotDeviceMacAddress: null,
               sectorName: v.sectorName.trim(),
             })
             .pipe(
@@ -164,38 +211,50 @@ export class AdminFieldComponent implements OnInit {
                 this.pushLog(
                   `${this.t.translate('admin.field.log.sectorSkip')} ${getApiErrorMessage(e, '')}`.trim(),
                 );
-                return of(void 0);
+                throw e;
               }),
-              switchMap(() => {
+              switchMap((sector) => {
+                if (!sector.id) {
+                  throw new Error('The sector registration did not return a sector id.');
+                }
                 this.pushLog(this.t.translate('admin.field.log.sectorOk'));
-                return this.api.registerEdgeGateway(v.gatewayMac.trim(), v.monitoringZoneId).pipe(
+                return this.api
+                  .registerEdgeGateway(v.gatewayMac.trim(), ownerUserId, v.monitoringZoneId)
+                  .pipe(
                   catchError((e) => {
                     this.pushLog(
                       `${this.t.translate('admin.field.log.gatewaySkip')} ${getApiErrorMessage(e, '')}`.trim(),
                     );
-                    return of(void 0);
+                    throw e;
                   }),
-                );
+                    map((gateway) => {
+                      this.gatewayCloudKey.set(gateway.cloudKey);
+                      this.pushLog(this.t.translate('admin.field.log.gatewayOk'));
+                      return { plantationId, ownerUserId, sectorId: sector.id };
+                    }),
+                  );
               }),
-              switchMap(() => {
-                this.pushLog(this.t.translate('admin.field.log.gatewayOk'));
+              switchMap((context) => {
                 return this.api
                   .registerIotDevice(v.gatewayMac.trim(), {
                     iotMac: v.iotMac.trim(),
-                    plantationId,
+                    ownerUserId: context.ownerUserId,
+                    plantationId: context.plantationId,
+                    sectorId: context.sectorId,
                   })
                   .pipe(
                     catchError((e) => {
                       this.pushLog(
                         `${this.t.translate('admin.field.log.iotSkip')} ${getApiErrorMessage(e, '')}`.trim(),
                       );
-                      return of(void 0);
+                      throw e;
+                    }),
+                    map((iot) => {
+                      this.iotBootstrapKey.set(iot.bootstrapKey);
+                      this.pushLog(this.t.translate('admin.field.log.iotOk'));
+                      return context.plantationId;
                     }),
                   );
-              }),
-              switchMap(() => {
-                this.pushLog(this.t.translate('admin.field.log.iotOk'));
-                return of(plantationId);
               }),
             );
         }),

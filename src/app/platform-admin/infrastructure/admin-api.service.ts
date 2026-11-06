@@ -61,6 +61,31 @@ export interface AffiliationDto {
   id?: number;
 }
 
+export interface SectorResponse {
+  id: number;
+  name: string;
+  iotDeviceMacAddress?: string | null;
+  status?: string;
+  createdAt?: string;
+  activatedAt?: string | null;
+}
+
+export interface GatewayRegistrationResponse {
+  gatewayMac: string;
+  ownerUserId: number;
+  cloudKey: string;
+  createdAt: string;
+}
+
+export interface IotRegistrationResponse {
+  iotMac: string;
+  ownerUserId: number;
+  plantationId: number;
+  sectorId: number;
+  bootstrapKey: string;
+  createdAt: string;
+}
+
 /**
  * Admin operations for agronomist desk + palm-grower provisioning
  * (mobile grower app is separate; this console designates grower assets).
@@ -170,44 +195,56 @@ export class AdminApiService {
       );
   }
 
-  /**
-   * Plantation owned by the authenticated admin (infra / field tools).
-   * Prefer createPlantationForGrower when designating grower mobile assets.
-   */
+  /** Create an administrator-designated plantation owned by the selected PalmGrower. */
   createPlantation(body: {
     name: string;
     hectares: number;
     address: string;
     coordinates?: string;
+    palmGrowerId?: number;
   }): Observable<AdminPlantationDto> {
     return this.http.post<AdminPlantationDto>(`${this.base}/plantations`, {
       name: body.name,
       hectares: body.hectares,
       address: body.address,
       coordinates: body.coordinates ?? '',
+      ...(body.palmGrowerId ? { palmGrowerId: body.palmGrowerId } : {}),
     });
   }
 
   assignSector(
     plantationId: number,
-    body: { iotDeviceMacAddress: string; sectorName: string },
-  ): Observable<void> {
-    return this.http.post<void>(`${this.base}/admin/plantations/${plantationId}/sectors`, body);
+    body: { iotDeviceMacAddress?: string | null; sectorName: string },
+  ): Observable<SectorResponse> {
+    return this.http.post<SectorResponse>(
+      `${this.base}/admin/plantations/${plantationId}/sectors`,
+      body,
+    );
   }
 
   // ── Edge / IoT ─────────────────────────────────────────
-  registerEdgeGateway(edgeMac: string, monitoringZoneId = 1): Observable<void> {
-    return this.http.post<void>(`${this.base}/edge-gateways`, {
+  registerEdgeGateway(
+    edgeMac: string,
+    ownerUserId: number,
+    monitoringZoneId = 1,
+  ): Observable<GatewayRegistrationResponse> {
+    return this.http.post<GatewayRegistrationResponse>(`${this.base}/edge-gateways`, {
       edgeMac,
+      ownerUserId,
       monitoringZoneId,
     });
   }
 
   registerIotDevice(
     gatewayMac: string,
-    body: { iotMac: string; plantationId: number },
-  ): Observable<void> {
-    return this.http.post<void>(
+    body: {
+      iotMac: string;
+      ownerUserId: number;
+      plantationId: number;
+      sectorId: number;
+    },
+  ): Observable<IotRegistrationResponse> {
+    return this.http.post<IotRegistrationResponse>(
       `${this.base}/edge-gateways/${encodeURIComponent(gatewayMac)}/iot-devices`,
       body,
     );

@@ -7,8 +7,8 @@ import { SensorReadingService } from '../../shared/infrastructure/sensor-reading
 import {
   EdgeGatewayService,
   SectorHealthDto,
-} from '../../iot-device-management/infrastructure/edge-gateway-api.service';
-import { IotDeviceContextService } from '../../iot-device-management/infrastructure/iot-device-context.service';
+} from '../../features/iot-device-management/infrastructure/edge-gateway-api.service';
+import { IotDeviceContextService } from '../../features/iot-device-management/infrastructure/iot-device-context.service';
 import {
   AgronomicInterventionDto,
   InterventionApiService,
@@ -35,7 +35,7 @@ export class CropMonitoringDashboardStore {
 
   readonly loading = signal(true);
   readonly error = signal('');
-  readonly sectorId = signal(environment.demo.sectorId ?? 1);
+  readonly sectorId = signal(0);
 
   readonly recommendations = signal<Recommendation[]>([]);
   readonly pendingRecommendations = signal<Recommendation[]>([]);
@@ -210,7 +210,6 @@ export class CropMonitoringDashboardStore {
   loadAll(): void {
     this.loading.set(true);
     this.error.set('');
-    const sectorId = this.sectorId();
     const f = environment.features;
     const emptyRecs = {
       recommendations: [] as Recommendation[],
@@ -232,6 +231,8 @@ export class CropMonitoringDashboardStore {
       .pipe(
         switchMap((ctx) => {
           const deviceMac = ctx.deviceMac;
+          this.sectorId.set(ctx.sectorId);
+          const sectorId = ctx.sectorId;
           return forkJoin({
             pendingRecs: f.recommendations
               ? this.recommendationService.list({ scope: 'sector', sectorId }).pipe(

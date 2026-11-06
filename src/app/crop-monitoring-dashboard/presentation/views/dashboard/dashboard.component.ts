@@ -15,7 +15,6 @@ export class DashboardComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly t = inject(TranslationService);
   readonly features = environment.features;
-  readonly sectorId = environment.demo.sectorId ?? 1;
 
   get headingText(): string {
     return this.t.translate('dashboard.heading.agronomist');
@@ -36,7 +35,7 @@ export class DashboardComponent implements OnInit {
   get sectorChipLabel(): string {
     return this.t
       .translate('dashboard.context.sectorChip')
-      .replace('{{id}}', String(this.sectorId));
+      .replace('{{id}}', String(this.store.sectorId()));
   }
 
   get kpiPendingLabel(): string {

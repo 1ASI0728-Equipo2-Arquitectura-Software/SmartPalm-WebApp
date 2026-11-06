@@ -4,6 +4,6 @@ export const monitoringRoutes: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./views/monitoring-hub/monitoring-hub.component').then((m) => m.MonitoringHubComponent),
+      import('./monitoring-hub/monitoring-hub.component').then((m) => m.MonitoringHubComponent),
   },
 ];

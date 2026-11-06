@@ -1,10 +1,7 @@
 export const environment = {
   production: false,
-  /**
-   * Local SmartPalm .NET API (Swagger: https://localhost:7277/index.html).
-   * When the team deploys, switch this URL to the hosted base.
-   */
-  apiUrl: 'https://localhost:7277/api/v1',
+  /** Local SmartPalm microservices API Gateway. */
+  apiUrl: 'http://localhost:5100/api/v1',
   /** Always real backend for this project (mock retired). */
   dataSource: 'real' as 'real' | 'mock',
   /** Real IAM sign-in (POST /authentication/sign-in). No public register. */

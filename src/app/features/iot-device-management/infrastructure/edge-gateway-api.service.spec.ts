@@ -2,15 +2,15 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { EdgeGatewayService } from './edge-gateway-api.service';
 
 describe('EdgeGatewayService — sensor / IoT contract', () => {
   let service: EdgeGatewayService;
   let http: HttpTestingController;
   const api = environment.apiUrl;
-  const deviceMac = environment.demo.deviceMac;
-  const gatewayMac = environment.demo.gatewayMac;
+  const deviceMac = 'AA:BB:CC:DD:EE:01';
+  const gatewayMac = 'AA:BB:CC:00:00:01';
 
   beforeEach(() => {
     TestBed.configureTestingModule({

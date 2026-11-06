@@ -41,7 +41,7 @@ export const routes: Routes = [
       {
         path: 'monitoreo',
         loadChildren: () =>
-          import('./iot-device-management/presentation/monitoring.routes').then((m) => m.monitoringRoutes),
+          import('./features/iot-device-management/presentation/monitoring.routes').then((m) => m.monitoringRoutes),
       },
       {
         path: 'recomendaciones',

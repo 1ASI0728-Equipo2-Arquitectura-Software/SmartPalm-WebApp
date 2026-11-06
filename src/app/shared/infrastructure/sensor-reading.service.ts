@@ -12,6 +12,9 @@ export interface SensorReadingBackendDto {
   value: number;
   unit: string | null;
   measuredAt: string;
+  ownerUserId?: number;
+  plantationId?: number;
+  sectorId?: number;
 }
 
 const SENSOR_MAP: Record<
@@ -45,10 +48,32 @@ export class SensorReadingService {
       return of({ readings: [], totalElements: 0, totalPages: 0, page: 1, size: params?.size ?? 0 });
     }
 
-    const deviceMac = params?.deviceMac ?? environment.demo.deviceMac;
+    const deviceMac = params?.deviceMac;
+    if (!deviceMac?.trim()) {
+      return of({ readings: [], totalElements: 0, totalPages: 0, page: 1, size: params?.size ?? 0 });
+    }
     return this.http
       .get<SensorReadingBackendDto[]>(
         `${environment.apiUrl}/devices/${encodeURIComponent(deviceMac)}/sensor-readings${this.query(params)}`,
+      )
+      .pipe(map((items) => this.toResponse(items, params)));
+  }
+
+  /** GET /api/v1/sectors/{sectorId}/sensor-readings */
+  listBySector(
+    sectorId: number,
+    params?: { from?: string; to?: string; size?: number },
+  ): Observable<SensorReadingsResponse> {
+    if (!environment.features.sensors || sectorId <= 0) {
+      return of({ readings: [], totalElements: 0, totalPages: 0, page: 1, size: params?.size ?? 0 });
+    }
+    const query = new URLSearchParams();
+    if (params?.from) query.set('from', params.from);
+    if (params?.to) query.set('to', params.to);
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return this.http
+      .get<SensorReadingBackendDto[]>(
+        `${environment.apiUrl}/sectors/${sectorId}/sensor-readings${suffix}`,
       )
       .pipe(map((items) => this.toResponse(items, params)));
   }
@@ -126,16 +151,15 @@ export class SensorReadingService {
     return {
       id: index + 1,
       deviceId: 0,
-      plantationId: environment.demo.plantationId,
-      monitoringZoneId: 0,
-      userId: environment.demo.agronomistId,
+      plantationId: dto.plantationId ?? 0,
+      monitoringZoneId: dto.sectorId ?? 0,
+      userId: dto.ownerUserId ?? 0,
       variableType: meta.variableType,
       label: meta.labelKey,
       sensorType: dto.sensorType,
       value: dto.value,
       unit: normalizeUnit(dto.unit, meta.unit),
       deviceSerial: dto.iotDeviceMacAddress,
-      plantationName: `Sector context`,
       recordedAt: normalizeMeasuredAt(dto.measuredAt),
     };
   }

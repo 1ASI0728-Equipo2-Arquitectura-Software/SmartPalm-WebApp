@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 
 export interface ConnectivityStatus {
   mac: string;
@@ -11,7 +11,18 @@ export interface ConnectivityStatus {
 
 export interface GatewayDevices {
   gatewayMac: string;
-  devices: { deviceMac: string }[];
+  devices: GatewayDevice[];
+}
+
+export interface GatewayDevice {
+  deviceMac: string;
+  ownerUserId: number;
+  plantationId: number;
+  sectorId: number;
+  isProvisioned: boolean;
+  isActive: boolean;
+  provisionedAt?: string | null;
+  revokedAt?: string | null;
 }
 
 export interface AgronomicThreshold {
@@ -24,7 +35,7 @@ export interface AgronomicThreshold {
 }
 
 export interface UpdateThresholdRequest {
-  type: string;
+  type: SensorTypeName;
   min?: number;
   max?: number;
   description?: string;
@@ -80,7 +91,7 @@ export class EdgeGatewayService {
     );
   }
 
-  listThresholds(deviceMac: string = environment.demo.deviceMac): Observable<AgronomicThreshold[]> {
+  listThresholds(deviceMac: string): Observable<AgronomicThreshold[]> {
     if (!environment.features.sensors) return of([]);
     return this.http.get<AgronomicThreshold[]>(
       `${environment.apiUrl}/devices/${encodeURIComponent(deviceMac)}/thresholds`,
@@ -89,7 +100,7 @@ export class EdgeGatewayService {
 
   updateThreshold(
     body: UpdateThresholdRequest,
-    deviceMac: string = environment.demo.deviceMac,
+    deviceMac: string,
   ): Observable<void> {
     return this.http.patch<void>(
       `${environment.apiUrl}/devices/${encodeURIComponent(deviceMac)}/thresholds`,

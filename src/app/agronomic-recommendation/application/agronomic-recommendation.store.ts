@@ -30,7 +30,7 @@ export class AgronomicRecommendationStore {
   readonly recommendationsError = signal('');
   /** Active list scope: sector (default) or general. */
   readonly listScope = signal<RecommendationScope>('sector');
-  readonly listSectorId = signal(environment.demo.sectorId ?? 1);
+  readonly listSectorId = signal(0);
 
   // ── Recommendation detail state ───────────────────────────────────
   readonly recommendationDetail = signal<Recommendation | null>(null);
@@ -44,7 +44,7 @@ export class AgronomicRecommendationStore {
   readonly recommendationFormLoading = signal(false);
   readonly recommendationFormSaving = signal(false);
   readonly recommendationFormError = signal('');
-  readonly formSectorId = signal(environment.demo.sectorId ?? 1);
+  readonly formSectorId = signal(0);
 
   // ── Report list state (feature-flagged off) ───────────────────────
   readonly reports = signal<Report[]>([]);
@@ -77,6 +77,12 @@ export class AgronomicRecommendationStore {
     this.recommendationsError.set('');
     const scope = params?.scope ?? this.listScope();
     const sectorId = params?.sectorId ?? this.listSectorId();
+    if (scope !== 'general' && sectorId <= 0) {
+      this.recommendations.set([]);
+      this.recommendationsLoading.set(false);
+      this.recommendationsError.set(this.t.translate('rec.error.noSector'));
+      return;
+    }
     this.listScope.set(scope);
     this.listSectorId.set(sectorId);
 
@@ -171,7 +177,7 @@ export class AgronomicRecommendationStore {
   prepareForm(): void {
     this.recommendationFormLoading.set(false);
     this.recommendationFormError.set('');
-    this.formSectorId.set(environment.demo.sectorId ?? 1);
+    this.formSectorId.set(0);
   }
 
   createRecommendation(request: CreateRecommendationRequest): Observable<Recommendation> {
@@ -182,8 +188,8 @@ export class AgronomicRecommendationStore {
       sectorId:
         request.scope === 'general'
           ? null
-          : request.sectorId || this.formSectorId() || environment.demo.sectorId || 1,
-      agronomistId: request.agronomistId || this.authService.user()?.id || environment.demo.agronomistId,
+          : request.sectorId || this.formSectorId() || 0,
+      agronomistId: request.agronomistId || this.authService.user()?.id || 0,
     };
     return this.recommendationService.create(payload).pipe(
       tap({

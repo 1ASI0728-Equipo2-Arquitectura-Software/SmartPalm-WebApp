@@ -2,11 +2,11 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
+import { finalize, forkJoin, switchMap } from 'rxjs';
 import { getApiErrorMessage } from '../../../../shared/infrastructure/api-error-message';
 import { AuthService } from '../../../../shared/infrastructure/auth.service';
 import { TranslationService } from '../../../../i18n/translation.service';
+import { IotDeviceContextService } from '../../../../features/iot-device-management/infrastructure/iot-device-context.service';
 import { RecommendationService } from '../../../../agronomic-recommendation/infrastructure/recommendation-api.service';
 import { Recommendation } from '../../../../agronomic-recommendation/domain/model/recommendation.entity';
 import {
@@ -25,8 +25,9 @@ export class InterventionListComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
   private readonly t = inject(TranslationService);
+  private readonly iotContext = inject(IotDeviceContextService);
 
-  readonly sectorId = environment.demo.sectorId ?? 1;
+  readonly sectorId = signal(0);
 
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -92,7 +93,7 @@ export class InterventionListComponent implements OnInit {
   get contextLabel(): string {
     return this.t
       .translate('interv.contextSector')
-      .replace('{{id}}', String(this.sectorId));
+      .replace('{{id}}', String(this.sectorId()));
   }
   get refreshLabel(): string {
     return this.t.translate('interv.refresh');
@@ -140,14 +141,19 @@ export class InterventionListComponent implements OnInit {
     this.error.set('');
     this.success.set('');
 
-    forkJoin({
-      items: this.api.listBySector(this.sectorId),
-      published: this.recApi.list({
-        scope: 'sector',
-        sectorId: this.sectorId,
-        status: 'Published',
+    this.iotContext.resolve().pipe(
+      switchMap((ctx) => {
+        this.sectorId.set(ctx.sectorId);
+        return forkJoin({
+          items: this.api.listBySector(ctx.sectorId),
+          published: this.recApi.list({
+            scope: 'sector',
+            sectorId: ctx.sectorId,
+            status: 'Published',
+          }),
+        });
       }),
-    })
+    )
       .pipe(
         finalize(() => {
           this.loading.set(false);
@@ -192,8 +198,12 @@ export class InterventionListComponent implements OnInit {
     this.saving.set(true);
     this.success.set('');
     this.error.set('');
+    if (this.sectorId() <= 0) {
+      this.error.set(this.t.translate('interv.error.load'));
+      return;
+    }
     this.api
-      .create(this.sectorId, {
+      .create(this.sectorId(), {
         description,
         performedBy,
         executionDate: parsedDate.toISOString(),

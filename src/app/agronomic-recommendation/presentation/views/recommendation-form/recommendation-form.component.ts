@@ -17,7 +17,7 @@ export class RecommendationFormComponent implements OnInit {
   readonly store = inject(AgronomicRecommendationStore);
   private readonly t = inject(TranslationService);
 
-  readonly defaultSectorId = environment.demo.sectorId ?? 1;
+  readonly defaultSectorId = 0;
 
   readonly form = this.fb.nonNullable.group({
     scope: ['sector' as RecommendationScope, [Validators.required]],

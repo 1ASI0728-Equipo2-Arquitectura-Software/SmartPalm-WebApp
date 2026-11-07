@@ -186,6 +186,11 @@
       "errorLoad": "Could not load users.",
       "errorCreate": "Could not create the user.",
       "reload": "Refresh list",
+      "delete": "Delete user",
+      "deleting": "Deleting...",
+      "deleteConfirm": "Delete {{name}} and all related data? This action cannot be undone.",
+      "deleted": "User {{name}} and related data were deleted.",
+      "errorDelete": "The user deletion could not be completed.",
       "role": {
         "admin": "Administrator",
         "agronomist": "Agronomist",

@@ -186,6 +186,11 @@
       "errorLoad": "No se pudo cargar la lista de usuarios.",
       "errorCreate": "No se pudo crear el usuario.",
       "reload": "Actualizar lista",
+      "delete": "Eliminar usuario",
+      "deleting": "Eliminando...",
+      "deleteConfirm": "¿Eliminar a {{name}} y todos sus datos relacionados? Esta acción no se puede deshacer.",
+      "deleted": "Usuario {{name}} y sus datos relacionados fueron eliminados.",
+      "errorDelete": "No se pudo completar la eliminación del usuario.",
       "role": {
         "admin": "Administrador",
         "agronomist": "Agrónomo",

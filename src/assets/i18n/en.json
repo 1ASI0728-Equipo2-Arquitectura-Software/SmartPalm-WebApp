@@ -191,6 +191,9 @@
       "deleteConfirm": "Delete {{name}} and all related data? This action cannot be undone.",
       "deleted": "User {{name}} and related data were deleted.",
       "errorDelete": "The user deletion could not be completed.",
+      "deleteToastSuccess": "User {{name}} and all related data were successfully deleted.",
+      "deleteToastError": "The user deletion could not be completed.",
+      "deleteToastTimeout": "The user deletion is taking longer than expected.",
       "role": {
         "admin": "Administrator",
         "agronomist": "Agronomist",
@@ -871,6 +874,7 @@
   },
   "notifications": {
     "header": "Notifications",
+    "close": "Close notification",
     "empty": "You have no recent notifications.",
     "markRead": "Mark as read",
     "markAllRead": "Mark all as read",

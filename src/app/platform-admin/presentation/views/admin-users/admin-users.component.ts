@@ -1,7 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { finalize } from 'rxjs';
-import { AdminApiService, AdminUserDto } from '../../../infrastructure/admin-api.service';
+import { finalize, switchMap, takeWhile, timer } from 'rxjs';
+import {
+  AdminApiService,
+  AdminUserDto,
+  UserDeletionOperationDto,
+} from '../../../infrastructure/admin-api.service';
 import { getApiErrorMessage } from '../../../../shared/infrastructure/api-error-message';
 import { TranslationService } from '../../../../i18n/translation.service';
 
@@ -18,6 +22,7 @@ export class AdminUsersComponent implements OnInit {
   readonly users = signal<AdminUserDto[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
+  readonly deletingUserId = signal<number | null>(null);
   readonly error = signal('');
   readonly success = signal('');
 
@@ -74,6 +79,12 @@ export class AdminUsersComponent implements OnInit {
   get reloadLabel(): string {
     return this.t.translate('admin.users.reload');
   }
+  get deleteLabel(): string {
+    return this.t.translate('admin.users.delete');
+  }
+  get deletingLabel(): string {
+    return this.t.translate('admin.users.deleting');
+  }
 
   /** Two creatable product roles (Administrator is seed-only). */
   readonly roleOptions: { value: 'Agronomist' | 'PalmGrower'; labelKey: string }[] = [
@@ -90,6 +101,54 @@ export class AdminUsersComponent implements OnInit {
     if (r.includes('admin')) return this.t.translate('admin.users.role.admin');
     if (r.includes('grower')) return this.t.translate('admin.users.role.grower');
     return this.t.translate('admin.users.role.agronomist');
+  }
+
+  canDeleteUser(user: AdminUserDto): boolean {
+    return !(user.role || '').toLowerCase().includes('admin');
+  }
+
+  deleteUser(user: AdminUserDto): void {
+    if (!this.canDeleteUser(user) || this.deletingUserId() !== null) return;
+    const confirmation = this.t
+      .translate('admin.users.deleteConfirm')
+      .replace('{{name}}', user.fullName || user.username);
+    if (typeof window !== 'undefined' && !window.confirm(confirmation)) return;
+
+    this.deletingUserId.set(user.id);
+    this.error.set('');
+    this.success.set('');
+    this.api
+      .deleteUser(user.id)
+      .pipe(
+        switchMap((operation) => this.pollDeletion(operation)),
+        finalize(() => this.deletingUserId.set(null)),
+      )
+      .subscribe({
+        next: (operation) => {
+          const status = operation.status.toLowerCase();
+          if (status === 'completed') {
+            this.success.set(
+              this.t.translate('admin.users.deleted').replace('{{name}}', user.fullName || user.username),
+            );
+            this.reload();
+          } else if (status === 'failed') {
+            this.error.set(operation.error || this.t.translate('admin.users.errorDelete'));
+          }
+        },
+        error: (e) =>
+          this.error.set(getApiErrorMessage(e, this.t.translate('admin.users.errorDelete'))),
+      });
+  }
+
+  private pollDeletion(operation: UserDeletionOperationDto) {
+    let attempts = 0;
+    return timer(0, 1000).pipe(
+      switchMap(() => {
+        attempts += 1;
+        return this.api.getUserDeletionStatus(operation.operationId);
+      }),
+      takeWhile((current) => current.status.toLowerCase() === 'pending' && attempts < 60, true),
+    );
   }
 
   roleChipBg(role: string): string {

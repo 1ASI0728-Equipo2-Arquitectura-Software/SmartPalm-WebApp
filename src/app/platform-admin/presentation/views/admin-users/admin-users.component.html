@@ -92,6 +92,19 @@
               {{ roleLabel(u.role) }}
             </span>
           </div>
+          @if (canDeleteUser(u)) {
+          <div class="mt-3 flex justify-end border-t pt-3" style="border-color: var(--color-border-subtle)">
+            <button
+              type="button"
+              [disabled]="deletingUserId() !== null"
+              (click)="deleteUser(u)"
+              class="rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:opacity-80 disabled:opacity-60"
+              style="background: var(--color-danger-10); color: var(--color-danger)"
+            >
+              {{ deletingUserId() === u.id ? deletingLabel : deleteLabel }}
+            </button>
+          </div>
+          }
         </li>
         }
       </ul>

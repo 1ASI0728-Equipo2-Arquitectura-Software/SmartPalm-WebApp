@@ -72,4 +72,29 @@ describe('AdminApiService — ownership and one-time credentials', () => {
       createdAt: new Date().toISOString(),
     });
   });
+
+  it('starts and polls a user deletion operation through the administrator endpoints', () => {
+    service.deleteUser(10).subscribe((response) => expect(response.status).toBe('Pending'));
+    const deleteRequest = http.expectOne(`${environment.apiUrl}/admin/users/10`);
+    expect(deleteRequest.request.method).toBe('DELETE');
+    deleteRequest.flush({
+      operationId: 'operation-1',
+      userId: 10,
+      status: 'Pending',
+      expectedServices: 7,
+      completedServices: 1,
+      requestedAt: new Date().toISOString(),
+    });
+
+    service.getUserDeletionStatus('operation-1').subscribe((response) => expect(response.status).toBe('Completed'));
+    const statusRequest = http.expectOne(`${environment.apiUrl}/admin/users/deletion-operations/operation-1`);
+    expect(statusRequest.request.method).toBe('GET');
+    statusRequest.flush({
+      operationId: 'operation-1',
+      status: 'Completed',
+      expectedServices: 7,
+      completedServices: 7,
+      requestedAt: new Date().toISOString(),
+    });
+  });
 });

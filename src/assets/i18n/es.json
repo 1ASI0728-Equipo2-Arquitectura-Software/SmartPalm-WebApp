@@ -186,6 +186,14 @@
       "errorLoad": "No se pudo cargar la lista de usuarios.",
       "errorCreate": "No se pudo crear el usuario.",
       "reload": "Actualizar lista",
+      "delete": "Eliminar usuario",
+      "deleting": "Eliminando...",
+      "deleteConfirm": "¿Eliminar a {{name}} y todos sus datos relacionados? Esta acción no se puede deshacer.",
+      "deleted": "Usuario {{name}} y sus datos relacionados fueron eliminados.",
+      "errorDelete": "No se pudo completar la eliminación del usuario.",
+      "deleteToastSuccess": "Usuario {{name}} eliminado con éxito junto con sus datos relacionados.",
+      "deleteToastError": "No se pudo completar la eliminación del usuario.",
+      "deleteToastTimeout": "La eliminación del usuario está tardando más de lo esperado.",
       "role": {
         "admin": "Administrador",
         "agronomist": "Agrónomo",
@@ -866,6 +874,7 @@
   },
   "notifications": {
     "header": "Notificaciones",
+    "close": "Cerrar notificación",
     "empty": "No tienes notificaciones recientes.",
     "markRead": "Marcar leída",
     "markAllRead": "Marcar todas leídas",

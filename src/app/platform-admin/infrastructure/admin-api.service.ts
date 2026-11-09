@@ -13,6 +13,17 @@ export interface AdminUserDto {
   status?: string;
 }
 
+export interface UserDeletionOperationDto {
+  operationId: string;
+  userId?: number | null;
+  status: string;
+  expectedServices: number;
+  completedServices: number;
+  requestedAt: string;
+  completedAt?: string | null;
+  error?: string | null;
+}
+
 export interface CreateAdminUserBody {
   username: string;
   password: string;
@@ -126,6 +137,16 @@ export class AdminApiService {
 
   createUser(body: CreateAdminUserBody): Observable<AdminUserDto> {
     return this.http.post<AdminUserDto>(`${this.base}/admin/users`, body);
+  }
+
+  deleteUser(userId: number): Observable<UserDeletionOperationDto> {
+    return this.http.delete<UserDeletionOperationDto>(`${this.base}/admin/users/${userId}`);
+  }
+
+  getUserDeletionStatus(operationId: string): Observable<UserDeletionOperationDto> {
+    return this.http.get<UserDeletionOperationDto>(
+      `${this.base}/admin/users/deletion-operations/${operationId}`,
+    );
   }
 
   // ── Subscriptions ──────────────────────────────────────

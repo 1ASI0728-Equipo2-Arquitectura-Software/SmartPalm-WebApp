@@ -23,9 +23,12 @@ describe('AdminApiService — ownership and one-time credentials', () => {
       expect(response.status).toBe('Active');
     });
 
-    const request = http.expectOne(`${environment.apiUrl}/admin/subscriptions/users/10`);
+    const request = http.expectOne(`${environment.apiUrl}/admin/subscriptions`);
     expect(request.request.method).toBe('GET');
-    request.flush({ userId: 10, status: 'Active' });
+    request.flush([
+      { userId: 9, status: 'Inactive' },
+      { userId: 10, status: 'Active' },
+    ]);
   });
 
   it('registers a gateway through the administrator route', () => {

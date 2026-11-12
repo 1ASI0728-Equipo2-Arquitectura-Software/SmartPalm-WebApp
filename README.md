@@ -189,7 +189,6 @@ POST   /api/v1/admin/users
 DELETE /api/v1/admin/users/{userId}
 GET    /api/v1/admin/users/deletion-operations/{operationId}
 
-GET    /api/v1/admin/subscriptions/users/{userId}
 POST   /api/v1/admin/subscriptions
 POST   /api/v1/admin/subscriptions/users/{userId}/payments
 
@@ -209,7 +208,7 @@ PATCH  /api/v1/devices/{deviceMac}/thresholds
 
 GET/POST /api/v1/recommendations
 GET/POST /api/v1/interventions
-GET      /api/v1/subscriptions/me
+GET      /api/v1/subscriptions
 ```
 
 El backend sigue siendo la autoridad para autorización, ownership, estado de suscripción y validación de los identificadores recibidos.

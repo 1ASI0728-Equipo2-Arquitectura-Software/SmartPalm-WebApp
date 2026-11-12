@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map, of, switchMap, tap, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { AuthService } from '../../../shared/infrastructure/auth.service';
 import { DeviceContext } from '../../../shared/domain/platform-contracts';
 import { EdgeGatewayService } from './edge-gateway-api.service';
 
@@ -19,7 +18,6 @@ export interface IotDeviceContext extends DeviceContext {
 @Injectable({ providedIn: 'root' })
 export class IotDeviceContextService {
   private readonly edge = inject(EdgeGatewayService);
-  private readonly auth = inject(AuthService);
   private cache: IotDeviceContext | null = null;
 
   /** Cached resolve (refresh=false) or force re-fetch (refresh=true). */
@@ -44,11 +42,9 @@ export class IotDeviceContextService {
         return this.edge.getDevices(gatewayMac).pipe(
           map((result) => {
             const devices = result?.devices ?? [];
-            const currentUser = this.auth.currentUser;
-            const owned = currentUser?.role === 'palm_grower'
-              ? devices.filter((d) => d.ownerUserId === currentUser.id)
-              : devices;
-            const device = owned.find((d) => d.isActive !== false) ?? owned[0];
+            // The API gateway applies account ownership from the authenticated JWT.
+            // Do not re-scope by a client-side user id or expose another account's data.
+            const device = devices.find((d) => d.isActive !== false) ?? devices[0];
             if (!device) {
               throw new Error(`Gateway ${gatewayMac} has no registered IoT devices for this account.`);
             }

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, map, switchMap } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, map, of, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PlanType, PlatformUserRole } from '../../shared/domain/platform-contracts';
 
@@ -158,8 +158,25 @@ export class AdminApiService {
   }
 
   getSubscriptionForUser(userId: number): Observable<AdminSubscriptionStatusDto> {
-    return this.http.get<AdminSubscriptionStatusDto>(
-      `${this.base}/admin/subscriptions/users/${userId}`,
+    return this.listSubscriptions().pipe(
+      switchMap((subscriptions) => {
+        const subscription = subscriptions.find((item) => item.userId === userId);
+        if (subscription) {
+          return of({
+            ...subscription,
+            userId,
+            status: subscription.status ?? 'Inactive',
+          });
+        }
+        return throwError(
+          () =>
+            new HttpErrorResponse({
+              status: 404,
+              statusText: 'Not Found',
+              url: `${this.base}/admin/subscriptions`,
+            }),
+        );
+      }),
     );
   }
 

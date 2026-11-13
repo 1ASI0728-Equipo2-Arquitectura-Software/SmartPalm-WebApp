@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AdminApiService, AdminUserDto } from '../../../infrastructure/admin-api.service';
 import { getApiErrorMessage } from '../../../../shared/infrastructure/api-error-message';
 import { TranslationService } from '../../../../i18n/translation.service';
+import { AdminUserDeletionService } from '../../../application/admin-user-deletion.service';
 
 @Component({
   selector: 'app-admin-users',
@@ -12,12 +13,14 @@ import { TranslationService } from '../../../../i18n/translation.service';
 })
 export class AdminUsersComponent implements OnInit {
   private readonly api = inject(AdminApiService);
+  private readonly deletionWorkflow = inject(AdminUserDeletionService);
   private readonly fb = inject(FormBuilder);
   private readonly t = inject(TranslationService);
 
   readonly users = signal<AdminUserDto[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
+  readonly deletingUserId = this.deletionWorkflow.deletingUserId;
   readonly error = signal('');
   readonly success = signal('');
 
@@ -27,6 +30,10 @@ export class AdminUsersComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
     role: ['Agronomist' as 'Agronomist' | 'PalmGrower', Validators.required],
+  });
+
+  private readonly refreshAfterDeletion = effect(() => {
+    if (this.deletionWorkflow.lastResult()?.status === 'completed') this.reload();
   });
 
   ngOnInit(): void {
@@ -74,6 +81,12 @@ export class AdminUsersComponent implements OnInit {
   get reloadLabel(): string {
     return this.t.translate('admin.users.reload');
   }
+  get deleteLabel(): string {
+    return this.t.translate('admin.users.delete');
+  }
+  get deletingLabel(): string {
+    return this.t.translate('admin.users.deleting');
+  }
 
   /** Two creatable product roles (Administrator is seed-only). */
   readonly roleOptions: { value: 'Agronomist' | 'PalmGrower'; labelKey: string }[] = [
@@ -90,6 +103,21 @@ export class AdminUsersComponent implements OnInit {
     if (r.includes('admin')) return this.t.translate('admin.users.role.admin');
     if (r.includes('grower')) return this.t.translate('admin.users.role.grower');
     return this.t.translate('admin.users.role.agronomist');
+  }
+
+  canDeleteUser(user: AdminUserDto): boolean {
+    return !(user.role || '').toLowerCase().includes('admin');
+  }
+
+  deleteUser(user: AdminUserDto): void {
+    if (!this.canDeleteUser(user) || this.deletingUserId() !== null) return;
+    const confirmation = this.t
+      .translate('admin.users.deleteConfirm')
+      .replace('{{name}}', user.fullName || user.username);
+    if (typeof window !== 'undefined' && !window.confirm(confirmation)) return;
+
+    this.error.set('');
+    this.deletionWorkflow.start(user);
   }
 
   roleChipBg(role: string): string {

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { IotDeviceContextService } from './iot-device-context.service';
 
 describe('IotDeviceContextService', () => {
@@ -38,11 +38,12 @@ describe('IotDeviceContextService', () => {
     devReq.flush({ gatewayMac: liveGw, devices: [{ deviceMac: liveDev }] });
   });
 
-  it('falls back to demo MACs when gateway list is empty', () => {
-    service.resolve().subscribe((ctx) => {
-      expect(ctx.gatewayMac).toBe(environment.demo.gatewayMac);
-      expect(ctx.deviceMac).toBe(environment.demo.deviceMac);
-      expect(ctx.resolvedFromApi).toBe(false);
+  it('fails when no registered gateway exists instead of using demo identifiers', () => {
+    service.resolve().subscribe({
+      next: () => expect.fail('A real context must not use demo identifiers.'),
+      error: (error: Error) => {
+        expect(error.message).toContain('No registered edge gateways');
+      },
     });
 
     http.expectOne(`${api}/edge-gateways`).flush([]);
@@ -58,7 +59,7 @@ describe('IotDeviceContextService', () => {
     ]);
     http
       .expectOne(`${api}/edge-gateways/${encodeURIComponent(liveGw)}/devices`)
-      .flush({ gatewayMac: liveGw, devices: [{ deviceMac: liveDev }] });
+      .flush({ gatewayMac: liveGw, devices: [{ deviceMac: liveDev, isActive: true }] });
 
     service.resolve().subscribe((ctx) => {
       expect(ctx.deviceMac).toBe(liveDev);

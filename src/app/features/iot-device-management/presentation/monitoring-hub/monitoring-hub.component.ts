@@ -4,7 +4,6 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, finalize, forkJoin, of, switchMap } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
 import { getApiErrorMessage } from '../../../../shared/infrastructure/api-error-message';
 import { SensorReadingService } from '../../../../shared/infrastructure/sensor-reading.service';
 import { SensorReading } from '../../../../shared/domain/sensor-reading.model';
@@ -12,11 +11,13 @@ import {
   AgronomicThreshold,
   ConnectivityStatus,
   EdgeGatewayService,
+  GatewayDevice,
   SENSOR_TYPES,
   SectorHealthDto,
+  SensorTypeName,
   UpdateThresholdRequest,
-} from '../../../infrastructure/edge-gateway-api.service';
-import { IotDeviceContextService } from '../../../infrastructure/iot-device-context.service';
+} from '../../infrastructure/edge-gateway-api.service';
+import { IotDeviceContextService } from '../../infrastructure/iot-device-context.service';
 import { TranslationService } from '../../../../i18n/translation.service';
 
 @Component({
@@ -31,10 +32,11 @@ export class MonitoringHubComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly t = inject(TranslationService);
 
-  /** Active MAC context (resolved from API; falls back to environment.demo). */
-  readonly deviceMac = signal(environment.demo.deviceMac);
-  readonly gatewayMac = signal(environment.demo.gatewayMac);
-  readonly sectorId = environment.demo.sectorId ?? 1;
+  /** Active context is resolved from the authenticated API session. */
+  readonly deviceMac = signal('');
+  readonly gatewayMac = signal('');
+  readonly sectorId = signal(0);
+  readonly deviceContext = signal<GatewayDevice | null>(null);
   readonly sensorTypes = SENSOR_TYPES;
 
   readonly loading = signal(true);
@@ -114,10 +116,30 @@ export class MonitoringHubComponent implements OnInit {
       .translate('monitor.contextLine')
       .replace('{{gateway}}', this.gatewayMac())
       .replace('{{device}}', this.deviceMac())
-      .replace('{{sector}}', String(this.sectorId));
+      .replace('{{sector}}', String(this.sectorId()));
   }
   get healthLabel(): string {
     return this.t.translate('monitor.sectorHealth');
+  }
+
+  get ownershipLabel(): string {
+    const ctx = this.deviceContext();
+    if (!ctx) return '';
+    return this.t
+      .translate('monitor.ownershipLine')
+      .replace('{{owner}}', String(ctx.ownerUserId))
+      .replace('{{plantation}}', String(ctx.plantationId))
+      .replace('{{sector}}', String(ctx.sectorId));
+  }
+
+  get provisioningLabel(): string {
+    const ctx = this.deviceContext();
+    if (!ctx) return '';
+    return this.t.translate(
+      ctx.isProvisioned
+        ? 'monitor.provisioning.provisioned'
+        : 'monitor.provisioning.pending',
+    );
   }
   get typeLabel(): string {
     return this.t.translate('monitor.form.type');
@@ -205,6 +227,17 @@ export class MonitoringHubComponent implements OnInit {
         switchMap((ctx) => {
           this.deviceMac.set(ctx.deviceMac);
           this.gatewayMac.set(ctx.gatewayMac);
+          this.sectorId.set(ctx.sectorId);
+          this.deviceContext.set({
+            deviceMac: ctx.deviceMac,
+            ownerUserId: ctx.ownerUserId,
+            plantationId: ctx.plantationId,
+            sectorId: ctx.sectorId,
+            isProvisioned: ctx.isProvisioned,
+            isActive: ctx.isActive,
+            provisionedAt: ctx.provisionedAt,
+            revokedAt: ctx.revokedAt,
+          });
           const deviceMac = ctx.deviceMac;
           const gatewayMac = ctx.gatewayMac;
 
@@ -213,7 +246,7 @@ export class MonitoringHubComponent implements OnInit {
               .listGateways()
               .pipe(catchError(() => of([] as ConnectivityStatus[]))),
             devices: this.edge.getDevices(gatewayMac).pipe(
-              catchError(() => of({ gatewayMac, devices: [] as { deviceMac: string }[] })),
+              catchError(() => of({ gatewayMac, devices: [] as GatewayDevice[] })),
             ),
             thresholds: this.edge.listThresholds(deviceMac).pipe(
               catchError((err: unknown) => {
@@ -226,9 +259,9 @@ export class MonitoringHubComponent implements OnInit {
             readings: this.sensors
               .list({ deviceMac, size: 30 })
               .pipe(catchError(() => of({ readings: [] as SensorReading[] }))),
-            sectorHealth: this.edge
-              .getSectorHealth(this.sectorId)
-              .pipe(catchError(() => of(null))),
+            sectorHealth: this.sectorId() > 0
+              ? this.edge.getSectorHealth(this.sectorId()).pipe(catchError(() => of(null)))
+              : of(null),
           });
         }),
         finalize(() => this.loading.set(false)),
@@ -284,7 +317,7 @@ export class MonitoringHubComponent implements OnInit {
     }
 
     const body: UpdateThresholdRequest = {
-      type: raw.type,
+      type: raw.type as SensorTypeName,
       min,
       max,
       description: raw.description?.trim() || undefined,
@@ -308,7 +341,7 @@ export class MonitoringHubComponent implements OnInit {
               }
             },
           });
-          this.edge.getSectorHealth(this.sectorId).subscribe({
+          this.edge.getSectorHealth(this.sectorId()).subscribe({
             next: (h) => this.sectorHealth.set(h),
             error: () => undefined,
           });

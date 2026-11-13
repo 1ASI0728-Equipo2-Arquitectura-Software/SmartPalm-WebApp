@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { App } from './app';
+import { TranslationService } from './i18n/translation.service';
 
 @Component({ template: '' })
 class DummyComponent {}
@@ -17,6 +18,7 @@ describe('App', () => {
           { path: 'dashboard', component: DummyComponent },
         ]),
         provideHttpClient(),
+        { provide: TranslationService, useValue: { translate: (key: string) => key } },
       ],
     }).compileComponents();
   });
@@ -31,5 +33,11 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('router-outlet')).toBeTruthy();
+  });
+
+  it('should render the global toast host next to the router outlet', () => {
+    const fixture = TestBed.createComponent(App);
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-global-toast')).toBeTruthy();
   });
 });

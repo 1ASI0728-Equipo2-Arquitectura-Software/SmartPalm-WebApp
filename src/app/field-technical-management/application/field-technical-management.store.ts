@@ -91,22 +91,7 @@ export class FieldTechnicalManagementStore {
 
     // Backend still lacks GET /plantations for agronomist portfolio (CropMonitoring WIP).
     if (!environment.features.plantationsApi) {
-      const now = new Date().toISOString();
-      this.plantations.set([
-        {
-          id: environment.demo.plantationId,
-          name: `Demo plantation #${environment.demo.plantationId}`,
-          location: 'Demo / live backend',
-          totalHectares: 10,
-          phenologicalPhase: 'produccion',
-          zonesCount: 0,
-          devicesCount: 1,
-          soilType: '—',
-          overallHealth: null,
-          connectedDevices: 0,
-          activeAlerts: 0,
-        },
-      ]);
+      this.plantations.set([]);
       this.plantationsLoading.set(false);
       return;
     }
@@ -126,24 +111,8 @@ export class FieldTechnicalManagementStore {
     this.plantationError.set('');
 
     if (!environment.features.plantationsApi) {
-      const now = new Date().toISOString();
-      this.plantation.set({
-        id: id || environment.demo.plantationId,
-        userId: environment.demo.agronomistId,
-        name: `Demo plantation #${id || environment.demo.plantationId}`,
-        location: 'Demo / live backend (no GET /plantations)',
-        totalHectares: 10,
-        soilType: '—',
-        cropAge: '—',
-        phenologicalPhase: 'produccion',
-        latitude: 0,
-        longitude: 0,
-        zonesCount: 0,
-        devicesCount: 1,
-        overallHealth: null,
-        createdAt: now,
-        updatedAt: now,
-      });
+      this.plantation.set(null);
+      this.plantationError.set(this.t.translate('ftm.error.loadPlantation'));
       this.plantationLoading.set(false);
       return;
     }

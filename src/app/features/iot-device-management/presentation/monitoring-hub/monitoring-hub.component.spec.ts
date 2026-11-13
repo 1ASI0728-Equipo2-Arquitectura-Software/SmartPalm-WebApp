@@ -7,7 +7,8 @@ import { Component } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { MonitoringHubComponent } from './monitoring-hub.component';
-import { EdgeGatewayService } from '../../../infrastructure/edge-gateway-api.service';
+import { EdgeGatewayService } from '../../infrastructure/edge-gateway-api.service';
+import { IotDeviceContextService } from '../../infrastructure/iot-device-context.service';
 import { SensorReadingService } from '../../../../shared/infrastructure/sensor-reading.service';
 import { TranslationService } from '../../../../i18n/translation.service';
 
@@ -180,6 +181,24 @@ function setup(locale: 'es' | 'en') {
               totalPages: 1,
               page: 1,
               size: 1,
+            }),
+          ),
+        },
+      },
+      {
+        provide: IotDeviceContextService,
+        useValue: {
+          resolve: vi.fn(() =>
+            of({
+              gatewayMac: 'AA:BB:CC:00:00:01',
+              deviceMac: 'AA:BB:CC:DD:EE:01',
+              iotMac: 'AA:BB:CC:DD:EE:01',
+              ownerUserId: 3,
+              plantationId: 1,
+              sectorId: 1,
+              isProvisioned: true,
+              isActive: true,
+              resolvedFromApi: true,
             }),
           ),
         },

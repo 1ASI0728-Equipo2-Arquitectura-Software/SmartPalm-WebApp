@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, map, switchMap } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, map, of, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { PlanType, PlatformUserRole } from '../../shared/domain/platform-contracts';
 
 export interface AdminUserDto {
   id: number;
@@ -12,12 +13,23 @@ export interface AdminUserDto {
   status?: string;
 }
 
+export interface UserDeletionOperationDto {
+  operationId: string;
+  userId?: number | null;
+  status: string;
+  expectedServices: number;
+  completedServices: number;
+  requestedAt: string;
+  completedAt?: string | null;
+  error?: string | null;
+}
+
 export interface CreateAdminUserBody {
   username: string;
   password: string;
   email: string;
   fullName: string;
-  role: 'Agronomist' | 'PalmGrower';
+  role: PlatformUserRole;
 }
 
 export interface AdminSubscriptionDto {
@@ -31,6 +43,11 @@ export interface AdminSubscriptionDto {
   createdAt?: string;
   userId?: number;
   id?: number | string;
+}
+
+export interface AdminSubscriptionStatusDto extends AdminSubscriptionDto {
+  userId: number;
+  status: string;
 }
 
 export interface AdminPlantationDto {
@@ -59,6 +76,31 @@ export interface AffiliationDto {
   agronomistId?: number;
   plantationId?: number;
   id?: number;
+}
+
+export interface SectorResponse {
+  id: number;
+  name: string;
+  iotDeviceMacAddress?: string | null;
+  status?: string;
+  createdAt?: string;
+  activatedAt?: string | null;
+}
+
+export interface GatewayRegistrationResponse {
+  gatewayMac: string;
+  ownerUserId: number;
+  cloudKey: string;
+  createdAt: string;
+}
+
+export interface IotRegistrationResponse {
+  iotMac: string;
+  ownerUserId: number;
+  plantationId: number;
+  sectorId: number;
+  bootstrapKey: string;
+  createdAt: string;
 }
 
 /**
@@ -97,12 +139,45 @@ export class AdminApiService {
     return this.http.post<AdminUserDto>(`${this.base}/admin/users`, body);
   }
 
+  deleteUser(userId: number): Observable<UserDeletionOperationDto> {
+    return this.http.delete<UserDeletionOperationDto>(`${this.base}/admin/users/${userId}`);
+  }
+
+  getUserDeletionStatus(operationId: string): Observable<UserDeletionOperationDto> {
+    return this.http.get<UserDeletionOperationDto>(
+      `${this.base}/admin/users/deletion-operations/${operationId}`,
+    );
+  }
+
   // ── Subscriptions ──────────────────────────────────────
-  createSubscription(userId: number, planType: string): Observable<AdminSubscriptionDto> {
+  createSubscription(userId: number, planType: PlanType | string): Observable<AdminSubscriptionDto> {
     return this.http.post<AdminSubscriptionDto>(`${this.base}/admin/subscriptions`, {
       userId,
       planType,
     });
+  }
+
+  getSubscriptionForUser(userId: number): Observable<AdminSubscriptionStatusDto> {
+    return this.listSubscriptions().pipe(
+      switchMap((subscriptions) => {
+        const subscription = subscriptions.find((item) => item.userId === userId);
+        if (subscription) {
+          return of({
+            ...subscription,
+            userId,
+            status: subscription.status ?? 'Inactive',
+          });
+        }
+        return throwError(
+          () =>
+            new HttpErrorResponse({
+              status: 404,
+              statusText: 'Not Found',
+              url: `${this.base}/admin/subscriptions`,
+            }),
+        );
+      }),
+    );
   }
 
   processPayment(userId: number, amount: number): Observable<unknown> {
@@ -111,7 +186,7 @@ export class AdminApiService {
     });
   }
 
-  /** Create subscription + payment (idempotent-ish: payment retried if sub exists). */
+  /** Create subscription + payment when the target account has no subscription yet. */
   activateAccess(userId: number, planType: string, amount: number): Observable<unknown> {
     return this.createSubscription(userId, planType).pipe(
       switchMap(() => this.processPayment(userId, amount)),
@@ -135,80 +210,57 @@ export class AdminApiService {
     return this.http.get<AdminPlantationDetailDto>(`${this.base}/admin/plantations/${id}`);
   }
 
-  /**
-   * Create plantation owned by a PalmGrower.
-   * API POST /plantations always uses the JWT user as owner — so we sign-in as the grower
-   * for this single request only (Bearer header), without replacing the admin session.
-   */
-  createPlantationForGrower(
-    growerUsername: string,
-    growerPassword: string,
-    body: { name: string; hectares: number; address: string; coordinates?: string },
-  ): Observable<AdminPlantationDto> {
-    return this.http
-      .post<{ userId: number; username: string; token: string }>(
-        `${this.base}/authentication/sign-in`,
-        { username: growerUsername.trim(), password: growerPassword },
-      )
-      .pipe(
-        switchMap((auth) => {
-          const headers = new HttpHeaders({
-            Authorization: `Bearer ${auth.token}`,
-            'Content-Type': 'application/json',
-          });
-          return this.http.post<AdminPlantationDto>(
-            `${this.base}/plantations`,
-            {
-              name: body.name,
-              hectares: body.hectares,
-              address: body.address,
-              coordinates: body.coordinates ?? '',
-            },
-            { headers },
-          );
-        }),
-      );
-  }
-
-  /**
-   * Plantation owned by the authenticated admin (infra / field tools).
-   * Prefer createPlantationForGrower when designating grower mobile assets.
-   */
+  /** Create an administrator-designated plantation owned by the selected PalmGrower. */
   createPlantation(body: {
     name: string;
     hectares: number;
     address: string;
     coordinates?: string;
+    palmGrowerId?: number;
   }): Observable<AdminPlantationDto> {
     return this.http.post<AdminPlantationDto>(`${this.base}/plantations`, {
       name: body.name,
       hectares: body.hectares,
       address: body.address,
       coordinates: body.coordinates ?? '',
+      ...(body.palmGrowerId ? { palmGrowerId: body.palmGrowerId } : {}),
     });
   }
 
   assignSector(
     plantationId: number,
-    body: { iotDeviceMacAddress: string; sectorName: string },
-  ): Observable<void> {
-    return this.http.post<void>(`${this.base}/admin/plantations/${plantationId}/sectors`, body);
+    body: { iotDeviceMacAddress?: string | null; sectorName: string },
+  ): Observable<SectorResponse> {
+    return this.http.post<SectorResponse>(
+      `${this.base}/admin/plantations/${plantationId}/sectors`,
+      body,
+    );
   }
 
   // ── Edge / IoT ─────────────────────────────────────────
-  registerEdgeGateway(edgeMac: string, monitoringZoneId = 1): Observable<void> {
-    return this.http.post<void>(`${this.base}/edge-gateways`, {
+  registerEdgeGateway(
+    edgeMac: string,
+    ownerUserId: number,
+    monitoringZoneId = 1,
+  ): Observable<GatewayRegistrationResponse> {
+    return this.http.post<GatewayRegistrationResponse>(`${this.base}/admin/edge-gateways`, {
       edgeMac,
+      ownerUserId,
       monitoringZoneId,
     });
   }
 
   registerIotDevice(
     gatewayMac: string,
-    body: { iotMac: string; plantationId: number },
-  ): Observable<void> {
-    return this.http.post<void>(
-      `${this.base}/edge-gateways/${encodeURIComponent(gatewayMac)}/iot-devices`,
+    body: {
+      iotMac: string;
+      ownerUserId: number;
+      plantationId: number;
+      sectorId: number;
+    },
+  ): Observable<IotRegistrationResponse> {
+    return this.http.post<IotRegistrationResponse>(
+      `${this.base}/admin/edge-gateways/${encodeURIComponent(gatewayMac)}/iot-devices`,
       body,
     );
   }

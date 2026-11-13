@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../shared/infrastructure/auth.service';
 import {
@@ -45,9 +45,12 @@ export class RecommendationService {
     plantationId?: number;
   }): Observable<RecommendationListResponse> {
     const scope: RecommendationScope = params?.scope ?? 'sector';
-    const sectorId =
-      params?.sectorId ?? params?.plantationId ?? environment.demo.sectorId ?? 1;
+    const sectorId = params?.sectorId ?? params?.plantationId ?? 0;
     const status = toBackendStatusFilter(params?.status);
+
+    if (scope !== 'general' && sectorId <= 0) {
+      return of({ totalElements: 0, totalPages: 0, page: 1, recommendations: [] });
+    }
 
     let httpParams = new HttpParams();
     if (status) httpParams = httpParams.set('status', status);
@@ -82,7 +85,7 @@ export class RecommendationService {
     return this.http.get<RecommendationBackendDto>(`${this.api}/recommendations/${id}`).pipe(
       map((dto) =>
         recommendationFromBackend(dto, {
-          sectorId: environment.demo.sectorId ?? 1,
+          sectorId: 0,
           agronomistId: this.currentAgronomistId(),
         }),
       ),
@@ -107,7 +110,10 @@ export class RecommendationService {
     };
 
     const scope = request.scope ?? 'sector';
-    const sectorId = request.sectorId ?? environment.demo.sectorId ?? 1;
+    const sectorId = request.sectorId ?? 0;
+    if (scope !== 'general' && sectorId <= 0) {
+      return throwError(() => new Error('A registered sector is required for this recommendation.'));
+    }
     const url =
       scope === 'general'
         ? `${this.api}/recommendations/general`
@@ -129,7 +135,7 @@ export class RecommendationService {
       .pipe(
         map((dto) =>
           recommendationFromBackend(dto, {
-            sectorId: environment.demo.sectorId ?? 1,
+            sectorId: 0,
             agronomistId: this.currentAgronomistId(),
           }),
         ),
@@ -142,7 +148,7 @@ export class RecommendationService {
       .pipe(
         map((dto) =>
           recommendationFromBackend(dto, {
-            sectorId: environment.demo.sectorId ?? 1,
+            sectorId: 0,
             agronomistId: this.currentAgronomistId(),
           }),
         ),
@@ -155,7 +161,7 @@ export class RecommendationService {
       .pipe(
         map((dto) =>
           recommendationFromBackend(dto, {
-            sectorId: environment.demo.sectorId ?? 1,
+            sectorId: 0,
             agronomistId: this.currentAgronomistId(),
           }),
         ),
@@ -165,6 +171,6 @@ export class RecommendationService {
   private currentAgronomistId(): number {
     const fromUser = this.auth.user()?.id;
     if (fromUser && fromUser > 0) return fromUser;
-    return environment.demo.agronomistId || 0;
+    return 0;
   }
 }

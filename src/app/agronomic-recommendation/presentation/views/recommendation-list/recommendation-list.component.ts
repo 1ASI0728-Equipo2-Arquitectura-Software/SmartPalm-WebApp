@@ -15,7 +15,7 @@ export class RecommendationListComponent implements OnInit {
   readonly store = inject(AgronomicRecommendationStore);
   private readonly t = inject(TranslationService);
 
-  readonly sectorId = environment.demo.sectorId ?? 1;
+  readonly sectorId = 0;
 
   /** Workflow tab: inbox (non-published) vs published. */
   readonly activeTab = signal<'pending' | 'published'>('pending');
